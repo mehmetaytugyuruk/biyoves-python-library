@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biyoves"
+version = "1.0.2"
+description = "AI-powered Biometric, Passport, and Visa photo generation library."
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+authors = [
+    {name = "BiyoVes"}
+]
+keywords = ["biyometrik", "fotoğraf", "vesikalık", "vize", "yapay zeka"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Multimedia :: Graphics :: Capture :: Digital Camera",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "opencv-python-headless>=4.5.0",
+    "numpy>=1.19.0",
+    "onnxruntime>=1.10.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/aytugyuruk/biyoves"
+Documentation = "https://github.com/aytugyuruk/biyoves#readme"
+Repository = "https://github.com/aytugyuruk/biyoves"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["biyoves"]
+
+[tool.setuptools.package-data]
+biyoves = ["modnet.onnx", "det_500m.onnx", "2d106det.onnx"]
+
