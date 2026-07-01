@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "biyoves"
-version = "1.0.2"
+version = "1.0.3"
 description = "AI-powered Biometric, Passport, and Visa photo generation library."
 readme = "README.md"
 requires-python = ">=3.7"
 license = {text = "MIT"}
 authors = [
-    {name = "BiyoVes"}
+    {name = "Mehmet Aytuğ Yürük", email = "myuruk1@ogr.iu.edu.tr"}
 ]
 keywords = ["biyometrik", "fotoğraf", "vesikalık", "vize", "yapay zeka"]
 classifiers = [
@@ -34,9 +34,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/aytugyuruk/biyoves"
-Documentation = "https://github.com/aytugyuruk/biyoves#readme"
-Repository = "https://github.com/aytugyuruk/biyoves"
+Homepage = "https://github.com/mehmetaytugyuruk/biyoves-python-library"
+Documentation = "https://github.com/mehmetaytugyuruk/biyoves-python-library#readme"
+Repository = "https://github.com/mehmetaytugyuruk/biyoves-python-library"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
