@@ -104,8 +104,8 @@ This project uses the following ONNX models:
 
 ### Model Citations
 
-- **MODNet**: Ze Liu, etc. "Is Depth Really Necessary for Shadow Detection?"
-- **InsightFace**: Jiankang Deng, etc. "InsightFace: 2D and 3D Face Analysis Project"
+- **MODNet**: Ze Liu, et al. "Is Depth Really Necessary for Shadow Detection?"
+- **InsightFace**: Jiankang Deng, et al. "InsightFace: 2D and 3D Face Analysis Project"
 
 ## License
 
