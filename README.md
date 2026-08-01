@@ -1,6 +1,13 @@
 # BiyoVes - Python Library
 
-AI-powered Biometric, Passport, and Visa photo generation library.
+AI-powered biometric, passport, and visa photo generation for Python.
+
+**Resources:** [PyPI](https://pypi.org/project/biyoves/) · [Source](https://github.com/mehmetaytugyuruk/biyoves-python-library) · [Issues](https://github.com/mehmetaytugyuruk/biyoves-python-library/issues) · [License](LICENSE)
+
+## Overview
+
+BiyoVes provides a compact API for background removal, face alignment,
+standards-based cropping, and print-ready photo layouts.
 
 ## Installation
 
@@ -11,8 +18,8 @@ pip install biyoves
 Or from source:
 
 ```bash
-git clone https://github.com/aytugyuruk/biyoves.git
-cd biyoves
+git clone https://github.com/mehmetaytugyuruk/biyoves-python-library.git
+cd biyoves-python-library
 pip install -e .
 ```
 
@@ -104,9 +111,24 @@ This project uses the following ONNX models:
 
 ### Model Citations
 
-- **MODNet**: Ze Liu, et al. "Is Depth Really Necessary for Shadow Detection?"
-- **InsightFace**: Jiankang Deng, et al. "InsightFace: 2D and 3D Face Analysis Project"
+- **MODNet**: Zhanghan Ke et al., "MODNet: Real-Time Trimap-Free Portrait Matting via Objective Decomposition," AAAI 2022.
+- **InsightFace**: Jiankang Deng et al., "InsightFace: 2D and 3D Face Analysis Project."
+
+## Third-Party Models and Licensing
+
+The BiyoVes source code is MIT-licensed. Bundled model weights retain their
+original terms and are not relicensed by this repository:
+
+- MODNet code and published models are provided under Apache-2.0 by the
+  [MODNet project](https://github.com/ZHKKKe/MODNet).
+- InsightFace model-zoo weights, including the SCRFD and 2D106 components used
+  here, are provided for **non-commercial research purposes only** according to
+  the [InsightFace model-zoo notice](https://github.com/deepinsight/insightface/tree/master/model_zoo).
+
+Review the upstream terms before redistributing the weights or using them in a
+commercial product.
 
 ## License
 
-MIT License
+The BiyoVes source code is released under the [MIT License](LICENSE). Third-party
+model weights are governed by the terms listed above.
