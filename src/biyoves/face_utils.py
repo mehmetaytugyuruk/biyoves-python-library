@@ -3,8 +3,7 @@ from __future__ import annotations
 import cv2
 import numpy as np
 import onnxruntime as ort
-import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 class SCRFD:
     def __init__(self, model_file: str, nms_thresh: float = 0.4, det_thresh: float = 0.5, input_size: Tuple[int, int] = (640, 640)) -> None:
@@ -256,4 +255,3 @@ class Face:
         self.kps = kps   # 5 keypoints
         self.landmark_2d_106 = lms106
         self.det_score = det_score
-

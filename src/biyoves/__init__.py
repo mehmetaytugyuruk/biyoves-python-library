@@ -6,7 +6,7 @@ from pathlib import Path
 import logging
 import os
 import tempfile
-from typing import Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from .corrector import FaceOrientationCorrector
 from .processor import BiometricIDGenerator
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Minimum input image dimensions (pixels)
 MIN_IMAGE_DIM = 100
+SUPPORTED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"}
 
 
 class BiyoVes:
@@ -68,8 +69,9 @@ class BiyoVes:
 
         Args:
             photo_type: One of 'biyometrik', 'vesikalik', 'abd_vizesi', 'schengen'.
-            layout_type: Grid layout — '2li' (2×1) or '4lu' (2×2).
-            output_path: Optional file path to save the result (JPEG/PNG supported).
+            layout_type: Grid layout — '2li' (2×1), '4lu' (2×2),
+                '6li' (3×2), or '8li' (4×2).
+            output_path: Optional file path to save the result (JPEG/PNG/PDF supported).
             bg_color: Background color as (B, G, R) tuple. Default is white (255, 255, 255).
 
         Returns:
@@ -163,6 +165,135 @@ class BiyoVes:
         """Change the input image path."""
         self.image_path = image_path
 
+    def check_quality(self, photo_type: str = "biyometrik") -> Dict[str, object]:
+        """
+        Check if the current image meets biometric quality standards.
+
+        Runs 4 checks:
+        - Blur detection (Laplacian variance on face region)
+        - Eye open/closed (Eye Aspect Ratio from landmarks)
+        - Face angle (yaw deviation from frontal)
+        - Resolution (face pixel height for 300 DPI print)
+
+        Args:
+            photo_type: Photo standard to check against.
+
+        Returns:
+            Dict with keys: is_acceptable, blur_score, eyes_open,
+            face_angle_degrees, resolution_sufficient, warnings.
+
+        Notes:
+            This is an automated preflight check, not a guarantee that an
+            issuing authority will accept the photo.
+
+        Raises:
+            ValueError: If no image path is set.
+            FileNotFoundError: If the image file doesn't exist.
+        """
+        from .quality import PhotoQualityChecker
+
+        if self.image_path is None:
+            raise ValueError("No image path set. Use BiyoVes('photo.jpg') or set_image().")
+
+        image = cv2.imread(self.image_path)
+        if image is None:
+            raise FileNotFoundError(f"Input image not found: {self.image_path}")
+
+        photo_spec = self.processor.PHOTO_SPECS.get(photo_type)
+        if photo_spec is None:
+            valid_types = ", ".join(sorted(self.processor.PHOTO_SPECS))
+            raise ValueError(f"Invalid photo type: '{photo_type}'. Valid types: {valid_types}")
+
+        # Enough source pixels to reach the standard's target face height at
+        # 300 DPI without upscaling.
+        min_face_px = int(np.ceil(photo_spec["face_h"] * self.processor.PIXELS_PER_MM))
+        checker = PhotoQualityChecker(
+            detector=self.processor.detector,
+            landmark_model=self.processor.landmarker,
+            min_face_px_for_print=min_face_px,
+        )
+        report = checker.check(image)
+        return report.to_dict()
+
+    @classmethod
+    def batch_process(cls, input_dir: str, photo_type: str = "biyometrik",
+                      layout_type: str = "2li", output_dir: Optional[str] = None,
+                      verbose: bool = True,
+                      bg_color: Tuple[int, int, int] = (255, 255, 255)) -> List[Dict[str, object]]:
+        """
+        Process all photos in a directory.
+
+        Creates a single BiyoVes instance (shared models) and processes
+        each image file found in input_dir.
+
+        Args:
+            input_dir: Path to directory containing input photos.
+            photo_type: One of 'biyometrik', 'vesikalik', 'abd_vizesi', 'schengen'.
+            layout_type: Grid layout — '2li', '4lu', '6li', or '8li'.
+            output_dir: Directory to save results. Defaults to ``input_dir/results``
+                and is created if it doesn't exist.
+            verbose: If True, log processing details.
+            bg_color: Background color as (B, G, R) tuple.
+
+        Returns:
+            List of dicts, one per image:
+            [{"file": "photo.jpg", "status": "success", "output": "out/photo_biyoves.jpg"},
+             {"file": "bad.jpg",   "status": "error",   "error": "No face detected"}]
+        """
+        input_path = Path(input_dir)
+        if not input_path.is_dir():
+            raise NotADirectoryError(f"Input directory not found: {input_dir}")
+
+        output_path = Path(output_dir) if output_dir else input_path / "results"
+        if output_path.resolve() == input_path.resolve():
+            raise ValueError("Output directory must be different from input directory.")
+
+        image_files = sorted(
+            f for f in input_path.iterdir()
+            if f.is_file() and f.suffix.lower() in SUPPORTED_IMAGE_EXTENSIONS
+        )
+
+        if not image_files:
+            if verbose:
+                logger.warning(f"No image files found in {input_dir}")
+            return []
+
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Single instance → shared models across all images
+        bv = cls(image_path=None, verbose=verbose)
+        results: List[Dict[str, object]] = []
+
+        for img_file in image_files:
+            bv.set_image(str(img_file))
+            try:
+                out_name = f"{img_file.stem}_biyoves{img_file.suffix}"
+                out_file = str(output_path / out_name)
+
+                bv.create_image(photo_type, layout_type, out_file, bg_color=bg_color)
+                results.append({
+                    "file": img_file.name,
+                    "status": "success",
+                    "output": out_file,
+                })
+                if verbose:
+                    logger.info(f"✓ {img_file.name}")
+            except Exception as e:
+                results.append({
+                    "file": img_file.name,
+                    "status": "error",
+                    "error": str(e),
+                })
+                if verbose:
+                    logger.warning(f"✗ {img_file.name}: {e}")
+
+        # Summary
+        success = sum(1 for r in results if r["status"] == "success")
+        if verbose:
+            logger.info(f"Batch complete: {success}/{len(results)} successful")
+
+        return results
+
 
 # Convenience function API
 def create_image(image_path: str, photo_type: str = "biyometrik",
@@ -187,5 +318,5 @@ def create_image(image_path: str, photo_type: str = "biyometrik",
     return biyoves.create_image(photo_type, layout_type, output_path, bg_color=bg_color)
 
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __all__ = ["BiyoVes", "create_image"]

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import cv2
-import numpy as np
 import logging
 import os
-from typing import Dict, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
+
+import numpy as np
 
 from .face_utils import SCRFD, Landmark106, Face
 from .remove_bg import BackgroundRemover
@@ -77,9 +78,9 @@ class BiometricIDGenerator:
             "schengen":   {"w": 35, "h": 45, "face_h": 28, "top_margin": 2.0},
         }
 
-    def _get_landmarks(self, face: Face) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def _get_landmarks(self, face: Face) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Returns key landmarks: (left_eye, right_eye, chin, nose_tip).
+        Returns key landmarks: (left_eye, right_eye, chin).
 
         Uses 106-point landmarks for chin if available, falls back to
         estimating chin from the 5-keypoint model.
@@ -89,15 +90,14 @@ class BiometricIDGenerator:
             # 106-point model: index 16 = chin point
             # 5-keypoint (kps): index 0 = left eye, 1 = right eye, 2 = nose
             # Use kps for eyes (very stable), 106 for chin (more precise)
-            return face.kps[0], face.kps[1], lms[16], face.kps[2]
+            return face.kps[0], face.kps[1], lms[16]
 
         # Fallback to 5-keypoint model with estimated chin
         # kps indices: 0=left_eye, 1=right_eye, 2=nose, 3=left_mouth, 4=right_mouth
         nose = face.kps[2]
         mouth_center = (face.kps[3] + face.kps[4]) / 2
-        nose_mouth_dist = np.linalg.norm(nose - mouth_center)
         estimated_chin = mouth_center + (mouth_center - nose) * 0.8
-        return face.kps[0], face.kps[1], estimated_chin, face.kps[2]
+        return face.kps[0], face.kps[1], estimated_chin
 
     def _estimate_hair_top(self, left_eye: np.ndarray, right_eye: np.ndarray,
                            chin: np.ndarray) -> float:
@@ -177,7 +177,10 @@ class BiometricIDGenerator:
             logger.warning(f"Hair detection failed: {e}")
             return None
 
-    def process_photo(self, image_input, photo_type="biyometrik", bg_color=(255, 255, 255)):
+    def process_photo(self, image_input: Union[str, np.ndarray],
+                      photo_type: str = "biyometrik",
+                      bg_color: Tuple[int, int, int] = (255, 255, 255)
+                      ) -> Optional[np.ndarray]:
         """
         Full biometric photo processing pipeline:
         detect → align → scale/crop → remove background.
@@ -233,7 +236,7 @@ class BiometricIDGenerator:
         face = Face(bbox=bbox, kps=kps, lms106=lms106, det_score=dets[largest_idx][4])
 
         # 2. Alignment (rotation to make eyes horizontal)
-        left_eye, right_eye, chin, nose = self._get_landmarks(face)
+        left_eye, right_eye, chin = self._get_landmarks(face)
 
         dy = right_eye[1] - left_eye[1]
         dx = right_eye[0] - left_eye[0]
@@ -257,7 +260,7 @@ class BiometricIDGenerator:
                 bbox = dets_rot[largest_idx][:4]
                 lms106 = self.landmarker.get(rotated_img, bbox)
                 face = Face(bbox=bbox, kps=kpss_rot[largest_idx], lms106=lms106)
-                left_eye, right_eye, chin, nose = self._get_landmarks(face)
+                left_eye, right_eye, chin = self._get_landmarks(face)
 
         # 4. Scaling & Cropping
         spec = self.PHOTO_SPECS[photo_type]

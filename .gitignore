@@ -135,3 +135,6 @@ test_images/
 *.jpeg
 output/
 results/
+
+# ONNX Runtime telemetry session artifact
+:memory:.ses

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import cv2
-import numpy as np
 import logging
 import os
 from typing import Optional, Union
-from .face_utils import SCRFD, Face
+
+import numpy as np
+
+from .face_utils import SCRFD
 
 logger = logging.getLogger(__name__)
 

@@ -55,6 +55,43 @@ from biyoves import create_image
 passport = create_image("photo.jpg", "vesikalik", "2li", "result.jpg")
 ```
 
+### Batch Processing
+
+```python
+from biyoves import BiyoVes
+
+results = BiyoVes.batch_process(
+    input_dir="photos/",
+    photo_type="biyometrik",
+    layout_type="4lu",
+    output_dir="results/",
+)
+
+for result in results:
+    print(result)
+```
+
+Models are loaded once and shared across the batch. A failed photo is reported
+with `status="error"` without stopping the remaining files. If `output_dir` is
+omitted, results are written to `input_dir/results`.
+
+### Photo Quality Preflight
+
+```python
+from biyoves import BiyoVes
+
+img = BiyoVes("photo.jpg")
+report = img.check_quality("biyometrik")
+
+print(report["is_acceptable"])
+print(report["warnings"])
+```
+
+The preflight checks face-region blur, eye openness, estimated frontal face
+angle, and whether the detected face has enough source pixels for the selected
+standard at 300 DPI. These automated heuristics help catch common problems but
+do not guarantee acceptance by an issuing authority.
+
 ## Photo Types
 
 - `"biyometrik"` - Standard biometric photo (50x60mm)
@@ -66,29 +103,19 @@ passport = create_image("photo.jpg", "vesikalik", "2li", "result.jpg")
 
 - `"2li"` - 2 photos stacked vertically (2x1)
 - `"4lu"` - 4 photos in a grid (2x2)
+- `"6li"` - 6 photos in a grid (3x2)
+- `"8li"` - 8 photos in a grid (4x2)
 
 ## Features
 
 - AI-powered automatic background removal
 - Automatic face angle correction
 - Automatic cropping to standard dimensions
-- Print templates (2-up / 4-up layouts)
+- Batch directory processing with per-file results
+- Preflight checks for blur, eye openness, face angle, and resolution
+- Print templates (2-up / 4-up / 6-up / 8-up layouts)
+- Print-ready PDF output at 300 DPI
 - Cut lines for print-ready output
-
-## Example Usage
-
-```python
-from biyoves import BiyoVes
-
-# Load a photo
-img = BiyoVes("person.jpg")
-
-# Save in different formats
-img.create_image("vesikalik", "2li", "passport_2up.jpg")
-img.create_image("vesikalik", "4lu", "passport_4up.jpg")
-img.create_image("biyometrik", "2li", "biometric_2up.jpg")
-img.create_image("abd_vizesi", "4lu", "us_visa_4up.jpg")
-```
 
 ## Requirements
 
