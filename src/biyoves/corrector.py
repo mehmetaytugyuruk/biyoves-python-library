@@ -94,6 +94,11 @@ class FaceOrientationCorrector:
                     best_angle = angle
                     best_img = current_img
 
+                # Early exit: high-confidence upright face detected,
+                # no need to try remaining rotations
+                if best_score >= 0.8:
+                    break
+
         if self.verbose:
             if best_score > 0:
                 logger.info(f"Best orientation: {best_angle} degrees (score: {best_score:.4f})")

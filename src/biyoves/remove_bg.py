@@ -18,7 +18,7 @@ class BackgroundRemover:
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file not found: {model_path}")
 
-        self.session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
+        self.session = ort.InferenceSession(model_path, providers=ort.get_available_providers())
         self.input_name = self.session.get_inputs()[0].name
         self.ref_size = 512
 

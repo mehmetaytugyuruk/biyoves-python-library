@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "biyoves"
-version = "1.0.4"
+version = "1.1.0"
 description = "AI-powered Biometric, Passport, and Visa photo generation library."
 readme = "README.md"
 requires-python = ">=3.7"

@@ -6,7 +6,7 @@ import os
 class SCRFD:
     def __init__(self, model_file, nms_thresh=0.4, det_thresh=0.5, input_size=(640, 640)):
         self.model_file = model_file
-        self.session = ort.InferenceSession(self.model_file, providers=['CPUExecutionProvider'])
+        self.session = ort.InferenceSession(self.model_file, providers=ort.get_available_providers())
         self.center_cache = {}
         self.nms_thresh = nms_thresh
         self.det_thresh = det_thresh
@@ -211,7 +211,7 @@ def distance2kps(points, distance, max_shape=None):
 class Landmark106:
     def __init__(self, model_file):
         self.model_file = model_file
-        self.session = ort.InferenceSession(self.model_file, providers=['CPUExecutionProvider'])
+        self.session = ort.InferenceSession(self.model_file, providers=ort.get_available_providers())
         self.input_name = self.session.get_inputs()[0].name
         self.input_shape = self.session.get_inputs()[0].shape # [1, 3, 192, 192]
         self.input_size = (192, 192)

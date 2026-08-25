@@ -169,7 +169,7 @@ class BiometricIDGenerator:
             logger.warning(f"Hair detection failed: {e}")
             return None
 
-    def process_photo(self, image_input, photo_type="biyometrik"):
+    def process_photo(self, image_input, photo_type="biyometrik", bg_color=(255, 255, 255)):
         """
         Full biometric photo processing pipeline:
         detect → align → scale/crop → remove background.
@@ -177,6 +177,7 @@ class BiometricIDGenerator:
         Args:
             image_input: BGR numpy array or file path string.
             photo_type: One of 'biyometrik', 'vesikalik', 'abd_vizesi', 'schengen'.
+            bg_color: Background color as (B, G, R) tuple. Default is white.
 
         Returns:
             Processed BGR image at the correct dimensions, or None on failure.
@@ -293,7 +294,7 @@ class BiometricIDGenerator:
 
         # 5. Background removal on the final cropped canvas (faster and cleaner)
         if self.bg_remover:
-            final_canvas_clean = self.bg_remover.process(final_canvas)
+            final_canvas_clean = self.bg_remover.process(final_canvas, bg_color=bg_color)
             if final_canvas_clean is not None:
                 final_canvas = final_canvas_clean
 

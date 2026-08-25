@@ -54,7 +54,8 @@ class BiyoVes:
                                              bg_remover=shared_bg_remover)
         self.layout_gen = PrintLayoutGenerator()
 
-    def create_image(self, photo_type="biyometrik", layout_type="2li", output_path=None):
+    def create_image(self, photo_type="biyometrik", layout_type="2li",
+                     output_path=None, bg_color=(255, 255, 255)):
         """
         Full pipeline: correct orientation → process biometric photo → generate print layout.
 
@@ -62,6 +63,7 @@ class BiyoVes:
             photo_type: One of 'biyometrik', 'vesikalik', 'abd_vizesi', 'schengen'.
             layout_type: Grid layout — '2li' (2×1) or '4lu' (2×2).
             output_path: Optional file path to save the result (JPEG/PNG supported).
+            bg_color: Background color as (B, G, R) tuple. Default is white (255, 255, 255).
 
         Returns:
             BGR numpy array of the final print layout.
@@ -92,7 +94,8 @@ class BiyoVes:
             corrected_img = original_img
 
         # 3. Biometric processing (detect, align, crop, scale, remove background)
-        processed_img = self.processor.process_photo(corrected_img, photo_type=photo_type)
+        processed_img = self.processor.process_photo(corrected_img, photo_type=photo_type,
+                                                     bg_color=bg_color)
         if processed_img is None:
             raise RuntimeError("Face detection or processing failed.")
 
@@ -129,7 +132,7 @@ class BiyoVes:
 
 # Convenience function API
 def create_image(image_path, photo_type="biyometrik", layout_type="2li",
-                 output_path=None, verbose=True):
+                 output_path=None, verbose=True, bg_color=(255, 255, 255)):
     """
     One-line API to create a biometric photo layout.
 
@@ -139,13 +142,14 @@ def create_image(image_path, photo_type="biyometrik", layout_type="2li",
         layout_type: Grid layout — '2li' (2×1) or '4lu' (2×2).
         output_path: Optional file path to save the result.
         verbose: If True, log processing details.
+        bg_color: Background color as (B, G, R) tuple. Default is white (255, 255, 255).
 
     Returns:
         BGR numpy array of the final print layout.
     """
     biyoves = BiyoVes(image_path, verbose=verbose)
-    return biyoves.create_image(photo_type, layout_type, output_path)
+    return biyoves.create_image(photo_type, layout_type, output_path, bg_color=bg_color)
 
 
-__version__ = "1.0.4"
+__version__ = "1.1.0"
 __all__ = ["BiyoVes", "create_image"]
