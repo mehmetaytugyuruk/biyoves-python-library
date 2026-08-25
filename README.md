@@ -2,12 +2,15 @@
 
 AI-powered biometric, passport, and visa photo generation for Python.
 
-**Resources:** [PyPI](https://pypi.org/project/biyoves/) · [Source](https://github.com/mehmetaytugyuruk/biyoves-python-library) · [Issues](https://github.com/mehmetaytugyuruk/biyoves-python-library/issues) · [License](LICENSE)
+**Resources:** [Web Studio](https://mehmetaytugyuruk.github.io/biyoves-python-library/) · [PyPI](https://pypi.org/project/biyoves/) · [Source](https://github.com/mehmetaytugyuruk/biyoves-python-library) · [Issues](https://github.com/mehmetaytugyuruk/biyoves-python-library/issues) · [License](LICENSE)
 
 ## Overview
 
 BiyoVes provides a compact API for background removal, face alignment,
 standards-based cropping, and print-ready photo layouts.
+
+Prefer a browser? The free [BiyoVes Web Studio](https://mehmetaytugyuruk.github.io/biyoves-python-library/)
+uses the same processing pipeline without requiring an account.
 
 ## Installation
 

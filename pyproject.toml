@@ -40,7 +40,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mehmetaytugyuruk/biyoves-python-library"
+Homepage = "https://mehmetaytugyuruk.github.io/biyoves-python-library/"
 Documentation = "https://github.com/mehmetaytugyuruk/biyoves-python-library#readme"
 Repository = "https://github.com/mehmetaytugyuruk/biyoves-python-library"
 
