@@ -120,7 +120,7 @@ frontal face angle. It reports warnings but never blocks image generation.
 
 ## Requirements
 
-- Python >= 3.7
+- Python >= 3.8
 - OpenCV
 - NumPy
 - ONNX Runtime

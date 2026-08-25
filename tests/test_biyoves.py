@@ -280,3 +280,121 @@ class TestProcessorValidation:
         gen = BiometricIDGenerator()
         result = gen.process_photo(None)
         assert result is None
+
+
+# ---------------------------------------------------------------------------
+# 8. Processor geometry (no models needed)
+# ---------------------------------------------------------------------------
+
+class TestProcessorGeometry:
+    @staticmethod
+    def generator_without_models():
+        from biyoves.processor import BiometricIDGenerator
+        return object.__new__(BiometricIDGenerator)
+
+    def test_uses_bottom_center_landmark_as_chin(self):
+        from biyoves.face_utils import Face
+
+        gen = self.generator_without_models()
+        landmarks = np.zeros((106, 2), dtype=np.float32)
+        landmarks[0] = [50, 90]
+        landmarks[16] = [10, 70]
+        keypoints = np.array([
+            [35, 40], [65, 40], [50, 55], [42, 67], [58, 67],
+        ], dtype=np.float32)
+        face = Face(
+            bbox=np.array([20, 20, 80, 100], dtype=np.float32),
+            kps=keypoints,
+            lms106=landmarks,
+        )
+
+        _, _, chin = gen._get_landmarks(face)
+
+        assert np.array_equal(chin, landmarks[0])
+
+    def test_implausible_busy_background_scan_uses_estimate(self):
+        gen = self.generator_without_models()
+        left_eye = np.array([40, 200], dtype=np.float32)
+        right_eye = np.array([60, 200], dtype=np.float32)
+        chin = np.array([50, 300], dtype=np.float32)
+        estimate = gen._estimate_hair_top(left_eye, right_eye, chin)
+
+        selected = gen._select_hair_top(
+            estimate,
+            detected_hair_top=0.0,
+            left_eye=left_eye,
+            right_eye=right_eye,
+            chin=chin,
+        )
+
+        assert estimate == pytest.approx(88.0)
+        assert selected == pytest.approx(estimate)
+
+    def test_plausible_scan_detection_is_used(self):
+        gen = self.generator_without_models()
+        left_eye = np.array([40, 50], dtype=np.float32)
+        right_eye = np.array([60, 50], dtype=np.float32)
+        chin = np.array([50, 100], dtype=np.float32)
+        estimate = gen._estimate_hair_top(left_eye, right_eye, chin)
+
+        selected = gen._select_hair_top(
+            estimate,
+            detected_hair_top=8.0,
+            left_eye=left_eye,
+            right_eye=right_eye,
+            chin=chin,
+        )
+
+        assert selected == pytest.approx(8.0)
+
+    def test_busy_background_portrait_keeps_hair_and_shoulders_in_frame(
+            self, models_available):
+        if not models_available:
+            pytest.skip("Models not available")
+
+        from biyoves.processor import BiometricIDGenerator
+
+        source = (
+            Path(__file__).parents[1]
+            / "website" / "public" / "demo" / "synthetic-source.webp"
+        )
+        image = cv2.imread(str(source))
+        result = BiometricIDGenerator().process_photo(image, photo_type="biyometrik")
+
+        assert result is not None
+        nonwhite = np.max(255 - result, axis=2) > 24
+        visible_rows = np.where(nonwhite.sum(axis=1) >= 8)[0]
+        target_margin = int(2.5 * (300 / 25.4))
+
+        assert visible_rows[0] == pytest.approx(target_margin, abs=12)
+        midpoint = result.shape[1] // 2
+        assert nonwhite[-1, :midpoint].mean() > 0.9
+        assert nonwhite[-1, midpoint:].mean() > 0.9
+
+
+class TestOnnxRuntimeFallback:
+    def test_retries_on_cpu_when_acceleration_fails(self, monkeypatch):
+        from biyoves import runtime
+
+        calls = []
+
+        def fake_session(model_path, providers):
+            calls.append(providers)
+            if providers != ["CPUExecutionProvider"]:
+                raise RuntimeError("synthetic accelerator failure")
+            return object()
+
+        monkeypatch.setattr(
+            runtime.ort,
+            "get_available_providers",
+            lambda: ["CoreMLExecutionProvider", "CPUExecutionProvider"],
+        )
+        monkeypatch.setattr(runtime.ort, "InferenceSession", fake_session)
+
+        session = runtime.create_inference_session("model.onnx")
+
+        assert session is not None
+        assert calls == [
+            ["CoreMLExecutionProvider", "CPUExecutionProvider"],
+            ["CPUExecutionProvider"],
+        ]

@@ -4,6 +4,15 @@ All notable changes to BiyoVes are documented here.
 
 ## Unreleased
 
+## 1.4.0 - 2026-08-25
+
+- Corrected biometric crop geometry by using the proper 106-point chin landmark.
+- Rejected implausible hair-top detections on busy backgrounds and added a
+  visual regression test for head margin and shoulder coverage.
+- Added safe CPU fallback when an available ONNX acceleration provider fails.
+- Reframed the website around the open-source Python library while preserving
+  the full live processing studio.
+
 ## 1.3.2 - 2026-08-25
 
 - Corrected the minimum supported Python version to 3.8 because the bundled

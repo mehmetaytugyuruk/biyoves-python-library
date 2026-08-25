@@ -57,52 +57,72 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </a>
 
     <nav class="main-nav" aria-label="Main navigation">
-      <a href="#how-it-works">How it works</a>
-      <a href="#standards">Standards</a>
+      <a href="#python-api">Python API</a>
+      <a href="#studio-section">Live studio</a>
       <a href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">GitHub</a>
     </nav>
 
-    <a class="header-action" href="#studio-section">Open studio <span aria-hidden="true">&#8595;</span></a>
+    <a class="header-action" href="https://pypi.org/project/biyoves/" target="_blank" rel="noreferrer">View on PyPI <span aria-hidden="true">&#8599;</span></a>
   </header>
 
   <main id="top">
     <section class="hero section-shell" aria-labelledby="hero-title">
       <div class="hero-copy">
-        <p class="eyebrow"><span class="eyebrow-dot"></span> Open-source biometric photo studio</p>
-        <h1 id="hero-title">Create print-ready biometric photos.</h1>
-        <p class="hero-description">Upload a portrait and get a properly sized, background-corrected, 300 DPI photo ready to download and print.</p>
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Open-source Python library · MIT code</p>
+        <h1 id="hero-title">Build print-ready biometric photos with Python.</h1>
+        <p class="hero-description">Detect, align, crop and prepare official photo formats with a free Python library—or run the same pipeline directly in your browser.</p>
 
         <div class="hero-actions">
-          <a class="hero-primary" href="#studio-section">Open the studio <span aria-hidden="true">&#8595;</span></a>
-          <a class="hero-secondary" href="#transformation">See a real result <span aria-hidden="true">&#8599;</span></a>
+          <a class="hero-primary" href="#studio-section">Try the live studio <span aria-hidden="true">&#8595;</span></a>
+          <a class="hero-secondary" href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">&#8599;</span></a>
+        </div>
+
+        <div class="install-command" aria-label="Package installation command">
+          <span aria-hidden="true">$</span>
+          <code>pip install biyoves</code>
+          <button id="copy-install" type="button">Copy</button>
         </div>
 
         <div class="trust-row" aria-label="Product highlights">
-          <span>No sign-up</span>
+          <span>Free &amp; open source</span>
+          <span>Python 3.8+</span>
           <span>300 DPI output</span>
-          <span>JPG &amp; PDF</span>
         </div>
       </div>
 
-      <figure class="hero-output">
-        <div class="hero-output-frame">
-          <img src="./demo/biyoves-print-sheet.webp" alt="A four-photo biometric print sheet created by BiyoVes" />
+      <figure class="hero-code" aria-label="BiyoVes Python usage example">
+        <div class="code-window-bar">
+          <span><i></i><i></i><i></i></span>
+          <span>example.py</span>
+          <span>Python</span>
         </div>
-        <figcaption><span>Real BiyoVes output</span><b>50 × 60 mm · 300 DPI</b></figcaption>
+        <pre><code><span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes
+
+photo = BiyoVes(<span class="code-string">"portrait.jpg"</span>)
+
+photo.create_image(
+    photo_type=<span class="code-string">"biyometrik"</span>,
+    layout_type=<span class="code-string">"4lu"</span>,
+    output_path=<span class="code-string">"print-sheet.jpg"</span>,
+)</code></pre>
+        <figcaption>
+          <span><i></i> Output created</span>
+          <b>50 × 60 mm · 4 photos · 300 DPI</b>
+        </figcaption>
       </figure>
     </section>
 
     <section class="studio-stage" id="studio-section" aria-labelledby="studio-title">
       <div class="studio-stage-heading section-shell">
         <div>
-          <p class="section-index">BiyoVes Studio / Live workspace</p>
-          <h2 id="studio-title">Everything you need, in one focused workspace.</h2>
+          <p class="section-index">Live library demo / No installation</p>
+          <h2 id="studio-title">Run BiyoVes before you install it.</h2>
         </div>
-        <p>Upload, configure, inspect and download without leaving the page.</p>
+        <p>This interface runs the same open-source processing pipeline available through the Python package.</p>
       </div>
       <div class="studio-frame section-shell">
         <div class="studio-frame-bar">
-          <span>BiyoVes Studio</span>
+          <span>BiyoVes / Web interface</span>
           <span class="studio-online ${isServiceConfigured() ? '' : 'is-offline'}"><i></i> ${isServiceConfigured() ? 'Processing service online' : 'Service configuration required'}</span>
           <span>Private session</span>
         </div>
@@ -146,11 +166,47 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <p class="proof-disclosure"><span>Synthetic demo subject</span> The source portrait depicts no real person. The output was produced by the public BiyoVes processing service using the same workflow available above.</p>
     </section>
 
+    <section class="library-section" id="python-api" aria-labelledby="library-title">
+      <div class="section-shell">
+        <div class="section-intro section-intro--row">
+          <div>
+            <p class="section-index">02 / PYTHON API</p>
+            <h2 id="library-title">Use the complete pipeline in your own workflow.</h2>
+          </div>
+          <p>BiyoVes is not only this web interface. Install it from PyPI and process photos locally. The source code is MIT-licensed; bundled model weights retain their upstream terms.</p>
+        </div>
+
+        <div class="api-grid">
+          <article>
+            <code>create_image()</code>
+            <h3>Process one portrait</h3>
+            <p>Align the face, replace the background and export a JPG, PNG or print-ready PDF.</p>
+          </article>
+          <article>
+            <code>batch_process()</code>
+            <h3>Run an entire folder</h3>
+            <p>Apply one official format and print layout to multiple source photos in a single call.</p>
+          </article>
+          <article>
+            <code>check_quality()</code>
+            <h3>Inspect before delivery</h3>
+            <p>Report sharpness, eye state and frontal angle without blocking the final output.</p>
+          </article>
+        </div>
+
+        <div class="library-links">
+          <div><span>$</span><code>pip install biyoves</code></div>
+          <a href="https://pypi.org/project/biyoves/" target="_blank" rel="noreferrer">Package on PyPI <span aria-hidden="true">&#8599;</span></a>
+          <a href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">Source on GitHub <span aria-hidden="true">&#8599;</span></a>
+        </div>
+      </div>
+    </section>
+
     <section class="standards-section" id="standards" aria-labelledby="standards-title">
       <div class="section-shell">
         <div class="section-intro section-intro--row">
           <div>
-            <p class="section-index">02 / STANDARDS</p>
+            <p class="section-index">03 / STANDARDS</p>
             <h2 id="standards-title">Built for official photo formats.</h2>
           </div>
           <p>Choose an existing standard. BiyoVes handles the exact physical dimensions and exports at 300 DPI.</p>
@@ -171,7 +227,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
     <section class="how-section section-shell" id="how-it-works" aria-labelledby="how-title">
       <div class="section-intro">
-        <p class="section-index">03 / HOW IT WORKS</p>
+        <p class="section-index">04 / HOW IT WORKS</p>
         <h2 id="how-title">One photo. Three simple steps.</h2>
       </div>
 
@@ -226,7 +282,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <a class="brand" href="#top" aria-label="BiyoVes home">
       <span>BiyoVes</span>
     </a>
-    <p>Open-source biometric photo studio.</p>
+    <p>Open-source biometric photo processing for Python.</p>
     <div class="footer-links">
       <a href="https://pypi.org/project/biyoves/" target="_blank" rel="noreferrer">PyPI</a>
       <a href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">GitHub</a>
@@ -234,6 +290,17 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <span class="footer-origin">Made in Türkiye</span>
   </footer>
 `
+
+const copyInstallButton = document.querySelector<HTMLButtonElement>('#copy-install')
+copyInstallButton?.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText('pip install biyoves')
+    copyInstallButton.textContent = 'Copied'
+    window.setTimeout(() => { copyInstallButton.textContent = 'Copy' }, 1600)
+  } catch {
+    copyInstallButton.textContent = 'pip install biyoves'
+  }
+})
 
 const studio = document.querySelector<HTMLDivElement>('#studio')!
 

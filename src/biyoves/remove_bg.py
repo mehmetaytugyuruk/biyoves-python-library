@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import cv2
 import numpy as np
-import onnxruntime as ort
 import os
 import logging
 from typing import Optional, Tuple, Union
+
+from .runtime import create_inference_session
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class BackgroundRemover:
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file not found: {model_path}")
 
-        self.session = ort.InferenceSession(model_path, providers=ort.get_available_providers())
+        self.session = create_inference_session(model_path)
         self.input_name = self.session.get_inputs()[0].name
         self.ref_size = 512
 

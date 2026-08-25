@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import cv2
 import numpy as np
-import onnxruntime as ort
 from typing import Any, List, Optional, Tuple
+
+from .runtime import create_inference_session
+
 
 class SCRFD:
     def __init__(self, model_file: str, nms_thresh: float = 0.4, det_thresh: float = 0.5, input_size: Tuple[int, int] = (640, 640)) -> None:
         self.model_file = model_file
-        self.session = ort.InferenceSession(self.model_file, providers=ort.get_available_providers())
+        self.session = create_inference_session(self.model_file)
         self.center_cache = {}
         self.nms_thresh = nms_thresh
         self.det_thresh = det_thresh
@@ -213,7 +215,7 @@ def distance2kps(points: np.ndarray, distance: np.ndarray, max_shape: Optional[T
 class Landmark106:
     def __init__(self, model_file: str) -> None:
         self.model_file = model_file
-        self.session = ort.InferenceSession(self.model_file, providers=ort.get_available_providers())
+        self.session = create_inference_session(self.model_file)
         self.input_name = self.session.get_inputs()[0].name
         self.input_shape = self.session.get_inputs()[0].shape # [1, 3, 192, 192]
         self.input_size = (192, 192)

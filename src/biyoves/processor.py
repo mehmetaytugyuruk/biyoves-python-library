@@ -87,10 +87,10 @@ class BiometricIDGenerator:
         """
         if face.landmark_2d_106 is not None:
             lms = face.landmark_2d_106
-            # 106-point model: index 16 = chin point
+            # InsightFace 2d106det: index 0 = bottom-center of the chin.
             # 5-keypoint (kps): index 0 = left eye, 1 = right eye, 2 = nose
             # Use kps for eyes (very stable), 106 for chin (more precise)
-            return face.kps[0], face.kps[1], lms[16]
+            return face.kps[0], face.kps[1], lms[0]
 
         # Fallback to 5-keypoint model with estimated chin
         # kps indices: 0=left_eye, 1=right_eye, 2=nose, 3=left_mouth, 4=right_mouth
@@ -104,18 +104,48 @@ class BiometricIDGenerator:
         """
         Estimates top of skull/hair based on eye and chin positions.
 
-        Uses the anthropometric heuristic that eyes sit at roughly
-        the vertical midpoint of the head. A 1.5x multiplier accounts
-        for hair volume above the skull.
+        Uses the eye-to-chin distance as a stable geometric fallback.
+        The factor places the estimated crown slightly closer to the eyes
+        than the chin, which matches typical frontal head proportions.
         """
         eye_center = (left_eye + right_eye) / 2
         chin_y = chin[1]
         eye_y = eye_center[1]
         face_bottom_half = chin_y - eye_y
 
-        # Factor: 1.0 = skull top, 1.3-1.5 = with hair volume
-        HAIR_VOLUME_FACTOR = 1.5
-        return eye_y - (face_bottom_half * HAIR_VOLUME_FACTOR)
+        CROWN_FACTOR = 1.12
+        return eye_y - (face_bottom_half * CROWN_FACTOR)
+
+    def _select_hair_top(self, estimated_hair_top: float,
+                         detected_hair_top: Optional[float],
+                         left_eye: np.ndarray, right_eye: np.ndarray,
+                         chin: np.ndarray) -> float:
+        """Use scan detection only when it is anthropometrically plausible.
+
+        Flood-fill works well on plain backgrounds but can classify unrelated
+        objects as foreground in everyday photos. Implausible detections fall
+        back to the landmark-based crown estimate.
+        """
+        if detected_hair_top is None:
+            return estimated_hair_top
+
+        eye_y = float(((left_eye + right_eye) / 2)[1])
+        eye_to_chin = float(chin[1] - eye_y)
+        if eye_to_chin <= 0:
+            return estimated_hair_top
+
+        eye_to_detected_top = eye_y - float(detected_hair_top)
+        min_ratio = 0.55
+        max_ratio = 1.25
+        if min_ratio <= eye_to_detected_top / eye_to_chin <= max_ratio:
+            return float(detected_hair_top)
+
+        logger.debug(
+            "Ignoring implausible hair-top scan at y=%.1f; using estimate y=%.1f.",
+            detected_hair_top,
+            estimated_hair_top,
+        )
+        return estimated_hair_top
 
     def _detect_hair_top_scan(self, img: np.ndarray, left_eye: np.ndarray,
                               right_eye: np.ndarray,
@@ -269,11 +299,13 @@ class BiometricIDGenerator:
         estimated_hair_top = self._estimate_hair_top(left_eye, right_eye, chin)
         detected_hair_top = self._detect_hair_top_scan(rotated_img, left_eye, right_eye, chin)
 
-        # Use the higher point (smaller Y) to be safe — handles voluminous hair
-        if detected_hair_top is not None:
-            hair_top_y = min(estimated_hair_top, detected_hair_top)
-        else:
-            hair_top_y = estimated_hair_top
+        hair_top_y = self._select_hair_top(
+            estimated_hair_top,
+            detected_hair_top,
+            left_eye,
+            right_eye,
+            chin,
+        )
 
         face_height_px = abs(chin[1] - hair_top_y)
 
