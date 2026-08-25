@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import cv2
 import numpy as np
 import logging
+from typing import Dict, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -8,7 +11,7 @@ logger = logging.getLogger(__name__)
 class PrintLayoutGenerator:
     """Arranges processed biometric photos in a printable grid layout with cut lines."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.DPI = 300
         self.PIXELS_PER_MM = self.DPI / 25.4
 
@@ -17,9 +20,11 @@ class PrintLayoutGenerator:
         self.GRID_CONFIGS = {
             "2li": {"rows": 2, "cols": 1},
             "4lu": {"rows": 2, "cols": 2},
+            "6li": {"rows": 3, "cols": 2},
+            "8li": {"rows": 4, "cols": 2},
         }
 
-    def generate_layout(self, image_input, layout_type="2li", photo_spec=None):
+    def generate_layout(self, image_input: Union[str, np.ndarray], layout_type: str = "2li", photo_spec: Optional[Dict[str, float]] = None) -> Optional[np.ndarray]:
         """
         Places the processed photo into a printable grid layout.
 

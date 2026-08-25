@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 import cv2
+import numpy as np
 from pathlib import Path
 import logging
+import os
+import tempfile
+from typing import Optional, Tuple
 
 from .corrector import FaceOrientationCorrector
 from .processor import BiometricIDGenerator
@@ -22,7 +28,7 @@ class BiyoVes:
     scale/crop → background removal → print layout.
     """
 
-    def __init__(self, image_path=None, verbose=True):
+    def __init__(self, image_path: Optional[str] = None, verbose: bool = True) -> None:
         """
         Args:
             image_path: Path to the input photo file.
@@ -54,8 +60,9 @@ class BiyoVes:
                                              bg_remover=shared_bg_remover)
         self.layout_gen = PrintLayoutGenerator()
 
-    def create_image(self, photo_type="biyometrik", layout_type="2li",
-                     output_path=None, bg_color=(255, 255, 255)):
+    def create_image(self, photo_type: str = "biyometrik", layout_type: str = "2li",
+                     output_path: Optional[str] = None,
+                     bg_color: Tuple[int, int, int] = (255, 255, 255)) -> np.ndarray:
         """
         Full pipeline: correct orientation → process biometric photo → generate print layout.
 
@@ -111,7 +118,10 @@ class BiyoVes:
         # 5. Save (if output path specified)
         if output_path:
             output_lower = output_path.lower()
-            if output_lower.endswith('.jpg') or output_lower.endswith('.jpeg'):
+            if output_lower.endswith('.pdf'):
+                # PDF output with correct physical dimensions at 300 DPI
+                self._save_as_pdf(final_layout, output_path)
+            elif output_lower.endswith('.jpg') or output_lower.endswith('.jpeg'):
                 # JPEG quality 100 = minimum compression (still lossy, but negligible)
                 cv2.imwrite(output_path, final_layout, [cv2.IMWRITE_JPEG_QUALITY, 100])
             elif output_lower.endswith('.png'):
@@ -125,22 +135,48 @@ class BiyoVes:
 
         return final_layout
 
-    def set_image(self, image_path):
+    def _save_as_pdf(self, image: np.ndarray, output_path: str) -> None:
+        """Save layout image as a print-ready PDF at 300 DPI."""
+        from fpdf import FPDF
+
+        h_px, w_px = image.shape[:2]
+        dpi = 300
+        w_mm = w_px / (dpi / 25.4)
+        h_mm = h_px / (dpi / 25.4)
+
+        pdf = FPDF(unit="mm", format=(w_mm, h_mm))
+        pdf.set_margin(0)
+        pdf.add_page()
+
+        # Write image to a temp file, embed in PDF, then clean up
+        tmp_fd, tmp_path = tempfile.mkstemp(suffix=".jpg")
+        try:
+            os.close(tmp_fd)
+            cv2.imwrite(tmp_path, image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+            pdf.image(tmp_path, x=0, y=0, w=w_mm, h=h_mm)
+            pdf.output(output_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+
+    def set_image(self, image_path: str) -> None:
         """Change the input image path."""
         self.image_path = image_path
 
 
 # Convenience function API
-def create_image(image_path, photo_type="biyometrik", layout_type="2li",
-                 output_path=None, verbose=True, bg_color=(255, 255, 255)):
+def create_image(image_path: str, photo_type: str = "biyometrik",
+                 layout_type: str = "2li", output_path: Optional[str] = None,
+                 verbose: bool = True,
+                 bg_color: Tuple[int, int, int] = (255, 255, 255)) -> np.ndarray:
     """
     One-line API to create a biometric photo layout.
 
     Args:
         image_path: Path to the input photo file.
         photo_type: One of 'biyometrik', 'vesikalik', 'abd_vizesi', 'schengen'.
-        layout_type: Grid layout — '2li' (2×1) or '4lu' (2×2).
-        output_path: Optional file path to save the result.
+        layout_type: Grid layout — '2li' (2×1), '4lu' (2×2), '6li' (3×2), or '8li' (4×2).
+        output_path: Optional file path to save the result (JPEG/PNG/PDF supported).
         verbose: If True, log processing details.
         bg_color: Background color as (B, G, R) tuple. Default is white (255, 255, 255).
 
@@ -151,5 +187,5 @@ def create_image(image_path, photo_type="biyometrik", layout_type="2li",
     return biyoves.create_image(photo_type, layout_type, output_path, bg_color=bg_color)
 
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __all__ = ["BiyoVes", "create_image"]

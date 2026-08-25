@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import cv2
 import numpy as np
 import logging
 import os
+from typing import Optional, Union
 from .face_utils import SCRFD, Face
 
 logger = logging.getLogger(__name__)
@@ -9,7 +12,7 @@ logger = logging.getLogger(__name__)
 class FaceOrientationCorrector:
     """Detects and corrects face orientation (0/90/180/270 degree rotations)."""
 
-    def __init__(self, verbose=False, detector=None):
+    def __init__(self, verbose: bool = False, detector: Optional[SCRFD] = None) -> None:
         """
         Args:
             verbose: If True, log orientation correction details.
@@ -30,7 +33,7 @@ class FaceOrientationCorrector:
             self.detector = SCRFD(model_path)
             self.detector.prepare(0)
 
-    def _rotate_image(self, image, angle):
+    def _rotate_image(self, image: np.ndarray, angle: int) -> np.ndarray:
         """Rotates image counter-clockwise by angle degrees (0, 90, 180, 270)."""
         if angle == 0: return image
         if angle == 90: return cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
@@ -38,7 +41,7 @@ class FaceOrientationCorrector:
         if angle == 270: return cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
         return image
 
-    def correct_image(self, image_input):
+    def correct_image(self, image_input: Union[str, np.ndarray]) -> Optional[np.ndarray]:
         """
         Tries all 4 cardinal orientations and returns the one with the
         highest-confidence upright face detection.

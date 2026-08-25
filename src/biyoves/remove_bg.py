@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import cv2
 import numpy as np
 import onnxruntime as ort
 import os
 import logging
+from typing import Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +13,7 @@ logger = logging.getLogger(__name__)
 class BackgroundRemover:
     """Removes image background using MODNet ONNX model with alpha matting."""
 
-    def __init__(self, model_path="modnet.onnx"):
+    def __init__(self, model_path: str = "modnet.onnx") -> None:
         """
         Args:
             model_path: Path to the MODNet ONNX model file.
@@ -22,7 +25,7 @@ class BackgroundRemover:
         self.input_name = self.session.get_inputs()[0].name
         self.ref_size = 512
 
-    def _get_dynamic_blur_radius(self, height, width):
+    def _get_dynamic_blur_radius(self, height: int, width: int) -> int:
         """Calculate Gaussian blur kernel size relative to image dimensions."""
         max_dim = max(height, width)
         k_size = int(max_dim / 300)
@@ -30,7 +33,7 @@ class BackgroundRemover:
             k_size += 1
         return max(1, k_size)
 
-    def process(self, image_input, bg_color=(255, 255, 255)):
+    def process(self, image_input: Union[str, np.ndarray], bg_color: Tuple[int, int, int] = (255, 255, 255)) -> Optional[np.ndarray]:
         """
         Remove background from image and replace with solid color.
 

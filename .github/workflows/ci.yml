@@ -25,3 +25,9 @@ jobs:
 
       - name: Import smoke test
         run: python -c "import biyoves; print('biyoves version:', biyoves.__version__)"
+
+      - name: Install test dependencies
+        run: pip install pytest
+
+      - name: Run tests
+        run: python -m pytest tests/ -v

@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import cv2
 import numpy as np
 import logging
 import os
+from typing import Dict, Optional, Tuple, Union
+
 from .face_utils import SCRFD, Landmark106, Face
 from .remove_bg import BackgroundRemover
 
@@ -16,7 +20,8 @@ MAX_IMAGE_DIM = 10000
 class BiometricIDGenerator:
     """Detects, aligns, scales, crops, and cleans background for biometric photos."""
 
-    def __init__(self, detector=None, bg_remover=None):
+    def __init__(self, detector: Optional[SCRFD] = None,
+                 bg_remover: Optional[BackgroundRemover] = None) -> None:
         """
         Args:
             detector: Optional shared SCRFD instance. If None, loads its own.
@@ -72,7 +77,7 @@ class BiometricIDGenerator:
             "schengen":   {"w": 35, "h": 45, "face_h": 28, "top_margin": 2.0},
         }
 
-    def _get_landmarks(self, face):
+    def _get_landmarks(self, face: Face) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Returns key landmarks: (left_eye, right_eye, chin, nose_tip).
 
@@ -94,7 +99,8 @@ class BiometricIDGenerator:
         estimated_chin = mouth_center + (mouth_center - nose) * 0.8
         return face.kps[0], face.kps[1], estimated_chin, face.kps[2]
 
-    def _estimate_hair_top(self, left_eye, right_eye, chin):
+    def _estimate_hair_top(self, left_eye: np.ndarray, right_eye: np.ndarray,
+                           chin: np.ndarray) -> float:
         """
         Estimates top of skull/hair based on eye and chin positions.
 
@@ -111,7 +117,9 @@ class BiometricIDGenerator:
         HAIR_VOLUME_FACTOR = 1.5
         return eye_y - (face_bottom_half * HAIR_VOLUME_FACTOR)
 
-    def _detect_hair_top_scan(self, img, left_eye, right_eye, chin):
+    def _detect_hair_top_scan(self, img: np.ndarray, left_eye: np.ndarray,
+                              right_eye: np.ndarray,
+                              chin: np.ndarray) -> Optional[float]:
         """
         Attempts to find the top pixel of the hair by flood-filling
         the background from the top edge of the image.

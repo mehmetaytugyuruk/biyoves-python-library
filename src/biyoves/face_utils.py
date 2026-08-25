@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 import cv2
 import numpy as np
 import onnxruntime as ort
 import os
+from typing import Any, Dict, List, Optional, Tuple
 
 class SCRFD:
-    def __init__(self, model_file, nms_thresh=0.4, det_thresh=0.5, input_size=(640, 640)):
+    def __init__(self, model_file: str, nms_thresh: float = 0.4, det_thresh: float = 0.5, input_size: Tuple[int, int] = (640, 640)) -> None:
         self.model_file = model_file
         self.session = ort.InferenceSession(self.model_file, providers=ort.get_available_providers())
         self.center_cache = {}
@@ -13,7 +16,7 @@ class SCRFD:
         self.input_size = input_size
         self._init_vars()
 
-    def _init_vars(self):
+    def _init_vars(self) -> None:
         input_cfg = self.session.get_inputs()[0]
         input_shape = input_cfg.shape
         # Input shape typically: [1, 3, 640, 640]
@@ -33,11 +36,11 @@ class SCRFD:
         self._num_anchors = 2
         self.use_kps = True
 
-    def prepare(self, ctx_id, **kwargs):
+    def prepare(self, ctx_id: int, **kwargs: Any) -> None:
         # Placeholder for compatibility if needed, but we do everything in init
         pass
 
-    def forward(self, img, threshold):
+    def forward(self, img: np.ndarray, threshold: float) -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
         scores_list = []
         bboxes_list = []
         kpss_list = []
@@ -90,7 +93,7 @@ class SCRFD:
 
         return scores_list, bboxes_list, kpss_list
 
-    def detect(self, img, input_size=None, max_num=0, metric='default'):
+    def detect(self, img: np.ndarray, input_size: Optional[Tuple[int, int]] = None, max_num: int = 0, metric: str = 'default') -> Tuple[np.ndarray, Optional[np.ndarray]]:
         if input_size is None:
             input_size = self.input_size
             
@@ -152,7 +155,7 @@ class SCRFD:
 
         return det, kpss
 
-    def nms(self, dets):
+    def nms(self, dets: np.ndarray) -> List[int]:
         thresh = self.nms_thresh
         x1 = dets[:, 0]
         y1 = dets[:, 1]
@@ -182,7 +185,7 @@ class SCRFD:
 
         return keep
 
-def distance2bbox(points, distance, max_shape=None):
+def distance2bbox(points: np.ndarray, distance: np.ndarray, max_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
     x1 = points[:, 0] - distance[:, 0]
     y1 = points[:, 1] - distance[:, 1]
     x2 = points[:, 0] + distance[:, 2]
@@ -194,7 +197,7 @@ def distance2bbox(points, distance, max_shape=None):
         y2 = np.clip(y2, 0, max_shape[0])
     return np.stack([x1, y1, x2, y2], axis=-1)
 
-def distance2kps(points, distance, max_shape=None):
+def distance2kps(points: np.ndarray, distance: np.ndarray, max_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
     """Convert anchor-relative distances to absolute keypoint coordinates."""
     preds = []
     for i in range(0, distance.shape[1], 2):
@@ -209,14 +212,14 @@ def distance2kps(points, distance, max_shape=None):
     return np.stack(preds, axis=-1)
 
 class Landmark106:
-    def __init__(self, model_file):
+    def __init__(self, model_file: str) -> None:
         self.model_file = model_file
         self.session = ort.InferenceSession(self.model_file, providers=ort.get_available_providers())
         self.input_name = self.session.get_inputs()[0].name
         self.input_shape = self.session.get_inputs()[0].shape # [1, 3, 192, 192]
         self.input_size = (192, 192)
 
-    def get(self, img, face_bbox):
+    def get(self, img: np.ndarray, face_bbox: np.ndarray) -> np.ndarray:
         w, h = face_bbox[2] - face_bbox[0], face_bbox[3] - face_bbox[1]
         center = (face_bbox[0] + w*0.5, face_bbox[1] + h*0.5)
         _scale = 192.0 / (max(w, h)*1.5)
@@ -248,7 +251,7 @@ class Landmark106:
         return original_points.astype(np.float32)
 
 class Face:
-    def __init__(self, bbox, kps, lms106=None, det_score=0.0):
+    def __init__(self, bbox: np.ndarray, kps: np.ndarray, lms106: Optional[np.ndarray] = None, det_score: float = 0.0) -> None:
         self.bbox = bbox # [x1, y1, x2, y2]
         self.kps = kps   # 5 keypoints
         self.landmark_2d_106 = lms106

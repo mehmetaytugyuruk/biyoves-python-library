@@ -141,6 +141,41 @@ class TestLayout:
         assert result.shape[1] == expected_w
         assert result.shape[0] == expected_h
 
+    def test_6li_layout_shape(self):
+        from biyoves.layout import PrintLayoutGenerator
+        lg = PrintLayoutGenerator()
+        dummy = np.ones((200, 150, 3), dtype=np.uint8) * 255
+        result = lg.generate_layout(dummy, layout_type="6li")
+        assert result is not None
+        # 6li = 3 rows × 2 cols
+        assert result.shape == (600, 300, 3)
+
+    def test_8li_layout_shape(self):
+        from biyoves.layout import PrintLayoutGenerator
+        lg = PrintLayoutGenerator()
+        dummy = np.ones((200, 150, 3), dtype=np.uint8) * 255
+        result = lg.generate_layout(dummy, layout_type="8li")
+        assert result is not None
+        # 8li = 4 rows × 2 cols
+        assert result.shape == (800, 300, 3)
+
+
+# ---------------------------------------------------------------------------
+# 4b. PDF output
+# ---------------------------------------------------------------------------
+
+class TestPDFOutput:
+    def test_pdf_save(self, models_available, tmp_path):
+        if not models_available:
+            pytest.skip("Models not available")
+        bv = BiyoVes(image_path=None)
+        # Test the internal _save_as_pdf method directly
+        dummy_layout = np.ones((400, 300, 3), dtype=np.uint8) * 255
+        pdf_path = str(tmp_path / "test_output.pdf")
+        bv._save_as_pdf(dummy_layout, pdf_path)
+        assert os.path.exists(pdf_path)
+        assert os.path.getsize(pdf_path) > 0
+
 
 # ---------------------------------------------------------------------------
 # 5. Background remover (needs modnet.onnx)
