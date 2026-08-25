@@ -8,7 +8,7 @@ version = "1.4.0"
 description = "AI-powered Biometric, Passport, and Visa photo generation library."
 readme = "README.md"
 requires-python = ">=3.8"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
     {name = "Mehmet Aytuğ Yürük", email = "myuruk1@ogr.iu.edu.tr"}
 ]
