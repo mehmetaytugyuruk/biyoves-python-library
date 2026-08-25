@@ -116,96 +116,46 @@ class BiometricIDGenerator:
         CROWN_FACTOR = 1.12
         return eye_y - (face_bottom_half * CROWN_FACTOR)
 
-    def _select_hair_top(self, estimated_hair_top: float,
-                         detected_hair_top: Optional[float],
-                         left_eye: np.ndarray, right_eye: np.ndarray,
-                         chin: np.ndarray) -> float:
-        """Use scan detection only when it is anthropometrically plausible.
-
-        Flood-fill works well on plain backgrounds but can classify unrelated
-        objects as foreground in everyday photos. Implausible detections fall
-        back to the landmark-based crown estimate.
-        """
-        if detected_hair_top is None:
-            return estimated_hair_top
-
-        eye_y = float(((left_eye + right_eye) / 2)[1])
-        eye_to_chin = float(chin[1] - eye_y)
-        if eye_to_chin <= 0:
-            return estimated_hair_top
-
-        eye_to_detected_top = eye_y - float(detected_hair_top)
-        min_ratio = 0.55
-        max_ratio = 1.25
-        if min_ratio <= eye_to_detected_top / eye_to_chin <= max_ratio:
-            return float(detected_hair_top)
-
-        logger.debug(
-            "Ignoring implausible hair-top scan at y=%.1f; using estimate y=%.1f.",
-            detected_hair_top,
-            estimated_hair_top,
-        )
-        return estimated_hair_top
-
-    def _detect_hair_top_scan(self, img: np.ndarray, left_eye: np.ndarray,
-                              right_eye: np.ndarray,
-                              chin: np.ndarray) -> Optional[float]:
-        """
-        Attempts to find the top pixel of the hair by flood-filling
-        the background from the top edge of the image.
-
-        Returns the Y-coordinate of the topmost foreground pixel
-        above the eyes, or None if detection fails.
-        """
-        try:
-            h, w = img.shape[:2]
-
-            # ROI: X range covering the head (2x inter-eye distance on each side)
-            face_w = np.linalg.norm(right_eye - left_eye) * 2.0
-            center_x = (left_eye[0] + right_eye[0]) / 2
-            x1 = int(max(0, center_x - face_w))
-            x2 = int(min(w, center_x + face_w))
-
-            if x2 <= x1:
-                return None
-
-            # Flood-fill from top edge to identify background pixels
-            mask = np.zeros((h + 2, w + 2), np.uint8)
-            flags = 4 | (255 << 8) | cv2.FLOODFILL_MASK_ONLY | cv2.FLOODFILL_FIXED_RANGE
-
-            # Tolerance for background color uniformity (BGR channels)
-            BG_TOLERANCE = (25, 25, 25)
-
-            work_img = img.copy()
-
-            # Seed points along the top edge
-            seeds = [(0, 0), (w - 1, 0), (int(w / 2), 0)]
-            for seed in seeds:
-                if 0 <= seed[0] < w and 0 <= seed[1] < h:
-                    cv2.floodFill(work_img, mask, seed, (0, 0, 0),
-                                  BG_TOLERANCE, BG_TOLERANCE, flags)
-
-            # In the mask, 255 = background. We look for foreground (0) above the eyes.
-            eye_y = int(min(left_eye[1], right_eye[1]))
-            if eye_y <= 0:
-                return None
-
-            # +1 offset because floodFill mask is padded by 1 on each side
-            roi_mask = mask[1:eye_y + 1, x1 + 1:x2 + 1]
-
-            # Find foreground pixels (value 0)
-            fg_rows, _ = np.where(roi_mask == 0)
-
-            if len(fg_rows) == 0:
-                return None
-
-            # Topmost foreground pixel
-            min_y = np.min(fg_rows)
-            return float(min_y)
-
-        except Exception as e:
-            logger.warning(f"Hair detection failed: {e}")
+    @staticmethod
+    def _first_stable_foreground_row(mask: np.ndarray,
+                                     min_pixels: int) -> Optional[int]:
+        """Return the first foreground row that continues into the next row."""
+        if mask.size == 0:
             return None
+
+        row_counts = np.count_nonzero(mask, axis=1)
+        stable = row_counts >= max(1, min_pixels)
+        for row in np.flatnonzero(stable):
+            if row + 1 < len(stable) and stable[row + 1]:
+                return int(row)
+        return None
+
+    def _detect_hair_top_from_matte(self, matte: Optional[np.ndarray],
+                                    bbox: np.ndarray,
+                                    left_eye: np.ndarray,
+                                    right_eye: np.ndarray) -> Optional[float]:
+        """Measure the real top of the hair inside a face-anchored matte ROI."""
+        if matte is None or matte.ndim != 2:
+            return None
+
+        h, w = matte.shape
+        face_w = max(1.0, float(bbox[2] - bbox[0]))
+        face_h = max(1.0, float(bbox[3] - bbox[1]))
+        pad_x = face_w * 0.35
+        x1 = int(max(0, np.floor(float(bbox[0]) - pad_x)))
+        x2 = int(min(w, np.ceil(float(bbox[2]) + pad_x)))
+        y1 = int(max(0, np.floor(float(bbox[1]) - face_h * 0.6)))
+        eye_y = int(min(h, np.ceil(min(float(left_eye[1]), float(right_eye[1])))))
+
+        if x2 <= x1 or eye_y <= y1:
+            return None
+
+        foreground = matte[y1:eye_y, x1:x2] >= 0.2
+        min_pixels = max(3, int(round(face_w * 0.015)))
+        row = self._first_stable_foreground_row(foreground, min_pixels)
+        if row is None:
+            return None
+        return float(y1 + row)
 
     def process_photo(self, image_input: Union[str, np.ndarray],
                       photo_type: str = "biyometrik",
@@ -292,20 +242,22 @@ class BiometricIDGenerator:
                 face = Face(bbox=bbox, kps=kpss_rot[largest_idx], lms106=lms106)
                 left_eye, right_eye, chin = self._get_landmarks(face)
 
-        # 4. Scaling & Cropping
+        # 4. Predict one portrait matte for both hair measurement and compositing
         spec = self.PHOTO_SPECS[photo_type]
+        source_matte = None
+        if self.bg_remover:
+            source_matte = self.bg_remover.predict_matte(rotated_img)
 
-        # Hair top detection: combine geometric estimate with scan-based detection
-        estimated_hair_top = self._estimate_hair_top(left_eye, right_eye, chin)
-        detected_hair_top = self._detect_hair_top_scan(rotated_img, left_eye, right_eye, chin)
-
-        hair_top_y = self._select_hair_top(
-            estimated_hair_top,
-            detected_hair_top,
-            left_eye,
-            right_eye,
-            chin,
-        )
+        # 5. Scaling & cropping using the measured top of the hair
+        detected_hair_top = None
+        if source_matte is not None:
+            detected_hair_top = self._detect_hair_top_from_matte(
+                source_matte, bbox, left_eye, right_eye,
+            )
+        if detected_hair_top is not None:
+            hair_top_y = detected_hair_top
+        else:
+            hair_top_y = self._estimate_hair_top(left_eye, right_eye, chin)
 
         face_height_px = abs(chin[1] - hair_top_y)
 
@@ -331,14 +283,20 @@ class BiometricIDGenerator:
             [0, scale, shift_y]
         ])
 
-        final_canvas = cv2.warpAffine(rotated_img, M_scale_trans, (target_w, target_h),
-                                      flags=cv2.INTER_LANCZOS4,
-                                      borderValue=(255, 255, 255))
+        final_canvas = cv2.warpAffine(
+            rotated_img, M_scale_trans, (target_w, target_h),
+            flags=cv2.INTER_LANCZOS4, borderValue=(255, 255, 255),
+        )
 
-        # 5. Background removal on the final cropped canvas (faster and cleaner)
-        if self.bg_remover:
-            final_canvas_clean = self.bg_remover.process(final_canvas, bg_color=bg_color)
-            if final_canvas_clean is not None:
-                final_canvas = final_canvas_clean
+        # 6. Reuse the same matte for the final background composite
+        if self.bg_remover and source_matte is not None:
+            final_matte = cv2.warpAffine(
+                source_matte, M_scale_trans, (target_w, target_h),
+                flags=cv2.INTER_LANCZOS4, borderValue=0.0,
+            )
+            final_matte = self.bg_remover.smooth_matte(final_matte)
+            final_canvas = self.bg_remover.composite(
+                final_canvas, final_matte, bg_color=bg_color,
+            )
 
         return final_canvas

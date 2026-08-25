@@ -218,6 +218,23 @@ class TestBackgroundRemover:
         assert result is not None
         assert result.shape == dummy.shape
 
+    def test_predict_matte_returns_input_dimensions(self, models_available):
+        if not models_available:
+            pytest.skip("Models not available")
+        from biyoves.remove_bg import BackgroundRemover
+        model_path = os.path.join(
+            os.path.dirname(__file__), '..', 'src', 'biyoves', 'models', 'modnet.onnx'
+        )
+        remover = BackgroundRemover(model_path)
+        dummy = np.ones((180, 120, 3), dtype=np.uint8) * 200
+
+        matte = remover.predict_matte(dummy)
+
+        assert matte is not None
+        assert matte.shape == dummy.shape[:2]
+        assert matte.dtype == np.float32
+        assert 0.0 <= float(matte.min()) <= float(matte.max()) <= 1.0
+
     def test_bg_remover_nonexistent_model_raises(self):
         from biyoves.remove_bg import BackgroundRemover
         with pytest.raises(FileNotFoundError):
@@ -312,40 +329,32 @@ class TestProcessorGeometry:
 
         assert np.array_equal(chin, landmarks[0])
 
-    def test_implausible_busy_background_scan_uses_estimate(self):
+    def test_matte_hair_detection_ignores_isolated_noise(self):
         gen = self.generator_without_models()
-        left_eye = np.array([40, 200], dtype=np.float32)
-        right_eye = np.array([60, 200], dtype=np.float32)
-        chin = np.array([50, 300], dtype=np.float32)
-        estimate = gen._estimate_hair_top(left_eye, right_eye, chin)
+        matte = np.zeros((120, 100), dtype=np.float32)
+        matte[4, 50] = 1.0
+        matte[18:70, 35:65] = 1.0
+        bbox = np.array([30, 30, 70, 100], dtype=np.float32)
 
-        selected = gen._select_hair_top(
-            estimate,
-            detected_hair_top=0.0,
-            left_eye=left_eye,
-            right_eye=right_eye,
-            chin=chin,
+        detected = gen._detect_hair_top_from_matte(
+            matte,
+            bbox,
+            left_eye=np.array([42, 58], dtype=np.float32),
+            right_eye=np.array([58, 58], dtype=np.float32),
         )
 
-        assert estimate == pytest.approx(88.0)
-        assert selected == pytest.approx(estimate)
+        assert detected == pytest.approx(18.0)
 
-    def test_plausible_scan_detection_is_used(self):
+    def test_matte_hair_detection_returns_none_without_foreground(self):
         gen = self.generator_without_models()
-        left_eye = np.array([40, 50], dtype=np.float32)
-        right_eye = np.array([60, 50], dtype=np.float32)
-        chin = np.array([50, 100], dtype=np.float32)
-        estimate = gen._estimate_hair_top(left_eye, right_eye, chin)
-
-        selected = gen._select_hair_top(
-            estimate,
-            detected_hair_top=8.0,
-            left_eye=left_eye,
-            right_eye=right_eye,
-            chin=chin,
+        detected = gen._detect_hair_top_from_matte(
+            np.zeros((120, 100), dtype=np.float32),
+            np.array([30, 30, 70, 100], dtype=np.float32),
+            left_eye=np.array([42, 58], dtype=np.float32),
+            right_eye=np.array([58, 58], dtype=np.float32),
         )
 
-        assert selected == pytest.approx(8.0)
+        assert detected is None
 
     def test_busy_background_portrait_keeps_hair_and_shoulders_in_frame(
             self, models_available):
@@ -370,6 +379,27 @@ class TestProcessorGeometry:
         midpoint = result.shape[1] // 2
         assert nonwhite[-1, :midpoint].mean() > 0.9
         assert nonwhite[-1, midpoint:].mean() > 0.9
+
+    def test_all_sample_portraits_keep_the_target_hair_margin(
+            self, models_available):
+        if not models_available:
+            pytest.skip("Models not available")
+
+        from biyoves.processor import BiometricIDGenerator
+
+        generator = BiometricIDGenerator()
+        sample_dir = Path(__file__).parents[1] / "samples"
+        target_margin = int(2.5 * (300 / 25.4))
+
+        for source in sorted(sample_dir.glob("*.jpg")):
+            result = generator.process_photo(str(source), photo_type="biyometrik")
+            assert result is not None, source.name
+
+            nonwhite = np.max(255 - result, axis=2) > 24
+            visible_rows = np.where(nonwhite.sum(axis=1) >= 8)[0]
+            assert visible_rows[0] == pytest.approx(
+                target_margin, abs=6,
+            ), source.name
 
 
 class TestOnnxRuntimeFallback:

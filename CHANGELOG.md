@@ -4,6 +4,15 @@ All notable changes to BiyoVes are documented here.
 
 ## Unreleased
 
+## 1.4.1 - 2026-08-25
+
+- Replaced flood-fill and fixed-ratio hair positioning with direct measurement
+  from the MODNet portrait matte.
+- Reused one matte for both crop geometry and background compositing, avoiding
+  a second model inference.
+- Added regression coverage for the synthetic demo and all sample portraits;
+  their visible top margins remain within 27-32 pixels of the 29-pixel target.
+
 ## 1.4.0 - 2026-08-25
 
 - Corrected biometric crop geometry by using the proper 106-point chin landmark.

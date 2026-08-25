@@ -34,16 +34,14 @@ class BackgroundRemover:
             k_size += 1
         return max(1, k_size)
 
-    def process(self, image_input: Union[str, np.ndarray], bg_color: Tuple[int, int, int] = (255, 255, 255)) -> Optional[np.ndarray]:
-        """
-        Remove background from image and replace with solid color.
+    def predict_matte(self, image_input: Union[str, np.ndarray]) -> Optional[np.ndarray]:
+        """Return a float32 foreground matte in the input image dimensions.
 
         Args:
             image_input: BGR numpy array or file path string.
-            bg_color: Background replacement color as (B, G, R) tuple.
 
         Returns:
-            BGR numpy array with background replaced, or None on failure.
+            A 2D alpha matte in the [0, 1] range, or None on failure.
         """
         if isinstance(image_input, str):
             image = cv2.imread(image_input)
@@ -80,14 +78,45 @@ class BackgroundRemover:
         matte_cropped = matte[:new_h, :new_w]
         matte_original = cv2.resize(matte_cropped, (w, h), interpolation=cv2.INTER_LANCZOS4)
 
-        # Smooth matte edges with adaptive Gaussian blur
-        blur_k = self._get_dynamic_blur_radius(h, w)
-        matte_blurred = cv2.GaussianBlur(matte_original, (blur_k, blur_k), 0)
-        alpha = matte_blurred[:, :, np.newaxis]
+        return np.clip(matte_original, 0.0, 1.0).astype(np.float32)
 
-        # Alpha-blend foreground with new background color
+    def smooth_matte(self, matte: np.ndarray) -> np.ndarray:
+        """Smooth matte edges at the dimensions used for compositing."""
+        h, w = matte.shape[:2]
+        blur_k = self._get_dynamic_blur_radius(h, w)
+        smoothed = cv2.GaussianBlur(matte, (blur_k, blur_k), 0)
+        return np.clip(smoothed, 0.0, 1.0).astype(np.float32)
+
+    @staticmethod
+    def composite(image: np.ndarray, matte: np.ndarray,
+                  bg_color: Tuple[int, int, int] = (255, 255, 255)) -> np.ndarray:
+        """Blend an image and foreground matte onto a solid background."""
+        if image.shape[:2] != matte.shape[:2]:
+            raise ValueError("Image and matte dimensions must match.")
+
+        alpha = np.clip(matte, 0.0, 1.0)[:, :, np.newaxis]
         foreground = image.astype(np.float32)
         background = np.full(image.shape, bg_color, dtype=np.float32)
         combined = (foreground * alpha) + (background * (1.0 - alpha))
 
         return combined.clip(0, 255).astype(np.uint8)
+
+    def process(self, image_input: Union[str, np.ndarray],
+                bg_color: Tuple[int, int, int] = (255, 255, 255)
+                ) -> Optional[np.ndarray]:
+        """Remove the background and replace it with a solid color."""
+        if isinstance(image_input, str):
+            image = cv2.imread(image_input)
+            if image is None:
+                logger.error(f"Could not read image: {image_input}")
+                return None
+        else:
+            image = image_input
+
+        if image is None:
+            return None
+
+        matte = self.predict_matte(image)
+        if matte is None:
+            return None
+        return self.composite(image, self.smooth_matte(matte), bg_color)
