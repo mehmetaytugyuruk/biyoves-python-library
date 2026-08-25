@@ -5,7 +5,10 @@ Unit tests run without models (input validation, API surface).
 Integration tests require ONNX models and are skipped if models are absent.
 """
 import os
+import re
 import sys
+from pathlib import Path
+
 import numpy as np
 import cv2
 import pytest
@@ -31,6 +34,16 @@ class TestVersion:
         parts = biyoves.__version__.split('.')
         assert len(parts) == 3
         assert all(p.isdigit() for p in parts)
+
+    def test_version_matches_project_metadata(self):
+        pyproject = Path(__file__).parents[1] / "pyproject.toml"
+        match = re.search(
+            r'^version = "([^"]+)"$',
+            pyproject.read_text(encoding="utf-8"),
+            re.MULTILINE,
+        )
+        assert match is not None
+        assert biyoves.__version__ == match.group(1)
 
     def test_all_exports(self):
         assert "BiyoVes" in biyoves.__all__
@@ -175,6 +188,15 @@ class TestPDFOutput:
         bv._save_as_pdf(dummy_layout, pdf_path)
         assert os.path.exists(pdf_path)
         assert os.path.getsize(pdf_path) > 0
+
+        media_box = re.search(
+            rb"/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]",
+            Path(pdf_path).read_bytes(),
+        )
+        assert media_box is not None
+        width_pt, height_pt = map(float, media_box.groups())
+        assert width_pt == pytest.approx(72.0, abs=0.01)
+        assert height_pt == pytest.approx(96.0, abs=0.01)
 
 
 # ---------------------------------------------------------------------------

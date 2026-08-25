@@ -6,28 +6,48 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.9", "3.11"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
 
       - name: Install package
-        run: pip install -e .
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
 
-      - name: Import smoke test
-        run: python -c "import biyoves; print('biyoves version:', biyoves.__version__)"
+      - name: Verify installed package and models
+        working-directory: /tmp
+        run: >-
+          python -c "from pathlib import Path; import biyoves;
+          models=sorted(p.name for p in (Path(biyoves.__file__).parent/'models').glob('*.onnx'));
+          assert models == ['2d106det.onnx', 'det_500m.onnx', 'modnet.onnx'];
+          print('biyoves version:', biyoves.__version__)"
 
       - name: Install test dependencies
-        run: pip install pytest
+        run: >-
+          python -m pip install
+          "pytest<8; python_version < '3.8'"
+          "pytest>=8; python_version >= '3.8'"
 
       - name: Run tests
-        run: python -m pytest tests/ -v
+        run: python -m pytest tests/ -q

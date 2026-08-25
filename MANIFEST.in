@@ -1,3 +1,4 @@
 include README.md
+include CHANGELOG.md
 recursive-include src/biyoves *.onnx
 recursive-include src/biyoves *.py
