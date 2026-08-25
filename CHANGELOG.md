@@ -4,6 +4,13 @@ All notable changes to BiyoVes are documented here.
 
 ## Unreleased
 
+## 1.3.2 - 2026-08-25
+
+- Corrected the minimum supported Python version to 3.8 because the bundled
+  ONNX models require a runtime newer than the final Python 3.7 build.
+- Expanded CI coverage to every supported Python version from 3.8 through 3.13.
+- Added verified, tokenless PyPI publishing and GitHub Release automation.
+
 ## 1.3.1 - 2026-08-25
 
 - Removed the input-resolution quality gate.

@@ -305,5 +305,5 @@ def create_image(image_path: str, photo_type: str = "biyometrik",
     return biyoves.create_image(photo_type, layout_type, output_path, bg_color=bg_color)
 
 
-__version__ = "1.3.1"
+__version__ = "1.3.2"
 __all__ = ["BiyoVes", "create_image"]
