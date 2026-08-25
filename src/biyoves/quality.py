@@ -5,7 +5,6 @@ Checks whether a photo meets biometric standards BEFORE processing:
 - Blur detection (Laplacian variance)
 - Eye open/closed (Eye Aspect Ratio from 106-point landmarks)
 - Face angle (yaw deviation from frontal)
-- Resolution sufficiency (enough pixels for 300 DPI print)
 """
 from __future__ import annotations
 
@@ -25,7 +24,6 @@ logger = logging.getLogger(__name__)
 BLUR_THRESHOLD = 80.0          # Laplacian variance; lower = blurrier
 EAR_THRESHOLD = 0.18           # Eye Aspect Ratio; lower = more closed
 MAX_FACE_ANGLE_DEG = 15.0      # Max estimated yaw deviation in degrees
-MIN_FACE_PX_FOR_PRINT = 200    # Fallback when no photo standard is supplied
 
 LEFT_EYE_INDICES = np.arange(33, 43)
 RIGHT_EYE_INDICES = np.arange(87, 97)
@@ -38,7 +36,6 @@ class QualityReport:
     blur_score: float = 0.0
     eyes_open: bool = True
     face_angle_degrees: float = 0.0
-    resolution_sufficient: bool = True
     warnings: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, object]:
@@ -47,7 +44,6 @@ class QualityReport:
             "blur_score": round(float(self.blur_score), 1),
             "eyes_open": bool(self.eyes_open),
             "face_angle_degrees": round(float(self.face_angle_degrees), 1),
-            "resolution_sufficient": bool(self.resolution_sufficient),
             "warnings": self.warnings,
         }
 
@@ -59,8 +55,7 @@ class PhotoQualityChecker:
                  landmark_model: Optional[Landmark106] = None,
                  blur_threshold: float = BLUR_THRESHOLD,
                  ear_threshold: float = EAR_THRESHOLD,
-                 max_face_angle_deg: float = MAX_FACE_ANGLE_DEG,
-                 min_face_px_for_print: int = MIN_FACE_PX_FOR_PRINT) -> None:
+                 max_face_angle_deg: float = MAX_FACE_ANGLE_DEG) -> None:
         model_dir = Path(__file__).parent / "models"
 
         if detector is None:
@@ -74,7 +69,6 @@ class PhotoQualityChecker:
         self.blur_threshold = float(blur_threshold)
         self.ear_threshold = float(ear_threshold)
         self.max_face_angle_deg = float(max_face_angle_deg)
-        self.min_face_px_for_print = int(min_face_px_for_print)
 
     def check(self, image: np.ndarray) -> QualityReport:
         """
@@ -119,9 +113,6 @@ class PhotoQualityChecker:
             report.warnings.append("Yüz açısı kontrol edilemedi.")
         else:
             self._check_face_angle(kpss[0], report)
-
-        # 4. Resolution check
-        self._check_resolution(bbox, report)
 
         # Final verdict
         report.is_acceptable = not report.warnings
@@ -212,19 +203,4 @@ class PhotoQualityChecker:
             report.warnings.append(
                 f"Yüz açısı çok büyük ({angle:.1f}°, "
                 f"maksimum: {self.max_face_angle_deg:.1f}°)"
-            )
-
-    def _check_resolution(self, bbox: np.ndarray,
-                          report: QualityReport) -> None:
-        """Check if face region has enough pixels for print quality."""
-        x1, y1, x2, y2 = bbox[:4]
-        face_height_px = abs(y2 - y1)
-        report.resolution_sufficient = bool(
-            face_height_px >= self.min_face_px_for_print
-        )
-
-        if not report.resolution_sufficient:
-            report.warnings.append(
-                f"Yüz çözünürlüğü yetersiz ({int(face_height_px)}px, "
-                f"minimum: {self.min_face_px_for_print}px)"
             )

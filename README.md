@@ -81,16 +81,14 @@ omitted, results are written to `input_dir/results`.
 from biyoves import BiyoVes
 
 img = BiyoVes("photo.jpg")
-report = img.check_quality("biyometrik")
+report = img.check_quality()
 
 print(report["is_acceptable"])
 print(report["warnings"])
 ```
 
-The preflight checks face-region blur, eye openness, estimated frontal face
-angle, and whether the detected face has enough source pixels for the selected
-standard at 300 DPI. These automated heuristics help catch common problems but
-do not guarantee acceptance by an issuing authority.
+The optional preflight checks face-region blur, eye openness, and estimated
+frontal face angle. It reports warnings but never blocks image generation.
 
 ## Photo Types
 
@@ -112,7 +110,7 @@ do not guarantee acceptance by an issuing authority.
 - Automatic face angle correction
 - Automatic cropping to standard dimensions
 - Batch directory processing with per-file results
-- Preflight checks for blur, eye openness, face angle, and resolution
+- Optional preflight checks for blur, eye openness, and face angle
 - Print templates (2-up / 4-up / 6-up / 8-up layouts)
 - Print-ready PDF output at 300 DPI
 - Cut lines for print-ready output

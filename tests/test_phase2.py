@@ -1,4 +1,4 @@
-"""Deterministic tests for the v1.3.0 batch and quality APIs."""
+"""Deterministic tests for the batch and quality APIs."""
 import os
 import sys
 from pathlib import Path
@@ -57,7 +57,6 @@ def quality_checker(image_bbox=(20, 10, 200, 260), eye_height=7.0,
     return PhotoQualityChecker(
         detector=FakeDetector(image_bbox, keypoints),
         landmark_model=FakeLandmarker(landmarks),
-        min_face_px_for_print=200,
     )
 
 
@@ -68,14 +67,13 @@ def sharp_image():
 
 
 class TestPhotoQualityChecker:
-    def test_acceptable_photo_passes_all_four_checks(self):
+    def test_acceptable_photo_passes_all_three_checks(self):
         report = quality_checker().check(sharp_image())
 
         assert report.is_acceptable is True
         assert report.blur_score > 80
         assert report.eyes_open is True
         assert report.face_angle_degrees == pytest.approx(0.0)
-        assert report.resolution_sufficient is True
         assert report.warnings == []
 
     def test_blurred_photo_is_rejected(self):
@@ -93,15 +91,13 @@ class TestPhotoQualityChecker:
         assert report.is_acceptable is False
         assert any("Gözler kapalı" in warning for warning in report.warnings)
 
-    def test_face_angle_and_resolution_are_rejected(self):
-        checker = quality_checker(image_bbox=(20, 20, 200, 150), nose_x=155.0)
+    def test_large_face_angle_is_rejected(self):
+        checker = quality_checker(nose_x=155.0)
         report = checker.check(sharp_image())
 
         assert report.face_angle_degrees > 15
-        assert report.resolution_sufficient is False
         assert report.is_acceptable is False
         assert any("Yüz açısı" in warning for warning in report.warnings)
-        assert any("çözünürlüğü" in warning for warning in report.warnings)
 
     def test_no_face_returns_an_unacceptable_report(self):
         checker = PhotoQualityChecker(
@@ -117,12 +113,12 @@ class TestPhotoQualityChecker:
         result = QualityReport().to_dict()
         assert set(result) == {
             "is_acceptable", "blur_score", "eyes_open",
-            "face_angle_degrees", "resolution_sufficient", "warnings",
+            "face_angle_degrees", "warnings",
         }
 
 
 class TestCheckQualityAPI:
-    def test_photo_type_sets_300_dpi_face_requirement(self, tmp_path, monkeypatch):
+    def test_uses_shared_models(self, tmp_path, monkeypatch):
         image_path = tmp_path / "photo.jpg"
         cv2.imwrite(str(image_path), np.full((100, 100, 3), 255, dtype=np.uint8))
         captured = {}
@@ -141,26 +137,15 @@ class TestCheckQualityAPI:
         instance.processor = SimpleNamespace(
             detector=object(),
             landmarker=object(),
-            PHOTO_SPECS={"biyometrik": {"face_h": 34}},
-            PIXELS_PER_MM=300 / 25.4,
         )
 
-        result = instance.check_quality("biyometrik")
+        result = instance.check_quality()
 
         assert result["is_acceptable"] is True
-        assert captured["min_face_px_for_print"] == 402
-
-    def test_invalid_photo_type_raises(self, tmp_path):
-        image_path = tmp_path / "photo.jpg"
-        cv2.imwrite(str(image_path), np.full((100, 100, 3), 255, dtype=np.uint8))
-        instance = object.__new__(BiyoVes)
-        instance.image_path = str(image_path)
-        instance.processor = SimpleNamespace(
-            PHOTO_SPECS={"biyometrik": {"face_h": 34}},
-        )
-
-        with pytest.raises(ValueError, match="Invalid photo type"):
-            instance.check_quality("unknown")
+        assert captured == {
+            "detector": instance.processor.detector,
+            "landmark_model": instance.processor.landmarker,
+        }
 
 
 class TestBatchProcess:

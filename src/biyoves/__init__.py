@@ -165,22 +165,18 @@ class BiyoVes:
         """Change the input image path."""
         self.image_path = image_path
 
-    def check_quality(self, photo_type: str = "biyometrik") -> Dict[str, object]:
+    def check_quality(self) -> Dict[str, object]:
         """
         Check if the current image meets biometric quality standards.
 
-        Runs 4 checks:
+        Runs 3 checks:
         - Blur detection (Laplacian variance on face region)
         - Eye open/closed (Eye Aspect Ratio from landmarks)
         - Face angle (yaw deviation from frontal)
-        - Resolution (face pixel height for 300 DPI print)
-
-        Args:
-            photo_type: Photo standard to check against.
 
         Returns:
             Dict with keys: is_acceptable, blur_score, eyes_open,
-            face_angle_degrees, resolution_sufficient, warnings.
+            face_angle_degrees, warnings.
 
         Notes:
             This is an automated preflight check, not a guarantee that an
@@ -199,18 +195,9 @@ class BiyoVes:
         if image is None:
             raise FileNotFoundError(f"Input image not found: {self.image_path}")
 
-        photo_spec = self.processor.PHOTO_SPECS.get(photo_type)
-        if photo_spec is None:
-            valid_types = ", ".join(sorted(self.processor.PHOTO_SPECS))
-            raise ValueError(f"Invalid photo type: '{photo_type}'. Valid types: {valid_types}")
-
-        # Enough source pixels to reach the standard's target face height at
-        # 300 DPI without upscaling.
-        min_face_px = int(np.ceil(photo_spec["face_h"] * self.processor.PIXELS_PER_MM))
         checker = PhotoQualityChecker(
             detector=self.processor.detector,
             landmark_model=self.processor.landmarker,
-            min_face_px_for_print=min_face_px,
         )
         report = checker.check(image)
         return report.to_dict()
@@ -318,5 +305,5 @@ def create_image(image_path: str, photo_type: str = "biyometrik",
     return biyoves.create_image(photo_type, layout_type, output_path, bg_color=bg_color)
 
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 __all__ = ["BiyoVes", "create_image"]
