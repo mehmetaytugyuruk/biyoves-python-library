@@ -90,72 +90,38 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         </div>
       </div>
 
-      <section class="package-explorer" aria-label="BiyoVes Python package explorer">
-        <header class="package-explorer-header">
-          <div class="package-identity">
-            <span class="package-monogram" aria-hidden="true">Py</span>
-            <div><strong>BiyoVes</strong><small>Open-source Python package</small></div>
+      <section class="code-canvas" aria-label="Interactive BiyoVes Python examples" aria-describedby="code-example-description">
+        <header class="code-canvas-header">
+          <div class="code-package">
+            <span class="code-package-mark" aria-hidden="true">Py</span>
+            <div><strong>BiyoVes</strong><small>Open-source package</small></div>
           </div>
-          <div class="package-meta" aria-label="Package metadata"><span>v1.4.1</span><span>MIT</span></div>
+          <div class="code-badges" aria-label="Package metadata">
+            <span>v1.4.1</span><span>MIT</span><span>PyPI</span>
+          </div>
         </header>
 
-        <div class="package-workspace">
-          <nav class="api-navigation" aria-label="Public API examples">
-            <span>Public API</span>
-            <button class="api-tab is-active" type="button" data-api-tab="create" aria-selected="true">
-              <code>create_image()</code><small>Single portrait</small>
-            </button>
-            <button class="api-tab" type="button" data-api-tab="batch" aria-selected="false">
-              <code>batch_process()</code><small>Entire folder</small>
-            </button>
-            <button class="api-tab" type="button" data-api-tab="quality" aria-selected="false">
-              <code>check_quality()</code><small>Preflight report</small>
-            </button>
-            <a href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">
-              <span>Repository</span><code>src/biyoves</code>
-            </a>
-          </nav>
-
-          <div class="api-preview">
-            <div class="api-preview-bar"><span>example.py</span><span>Python</span></div>
-
-            <pre class="api-panel" data-api-panel="create"><code><span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes
-
-photo = BiyoVes(<span class="code-string">"portrait.jpg"</span>)
-photo.create_image(
-    photo_type=<span class="code-string">"biyometrik"</span>,
-    layout_type=<span class="code-string">"4lu"</span>,
-    output_path=<span class="code-string">"sheet.jpg"</span>,
-)</code></pre>
-
-            <pre class="api-panel" data-api-panel="batch" hidden><code><span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes
-
-results = BiyoVes.batch_process(
-    input_dir=<span class="code-string">"portraits/"</span>,
-    output_dir=<span class="code-string">"results/"</span>,
-    photo_type=<span class="code-string">"biyometrik"</span>,
-    layout_type=<span class="code-string">"4lu"</span>,
-)</code></pre>
-
-            <pre class="api-panel" data-api-panel="quality" hidden><code><span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes
-
-photo = BiyoVes(<span class="code-string">"portrait.jpg"</span>)
-report = photo.check_quality()
-
-<span class="code-comment"># sharpness · eyes · face angle</span>
-print(report[<span class="code-string">"is_acceptable"</span>])</code></pre>
-
-            <div class="api-output">
-              <span><i></i> Package ready</span>
-              <strong>JPG · PNG · PDF · 300 DPI</strong>
-            </div>
-          </div>
+        <div class="code-tabs" role="tablist" aria-label="Python usage examples">
+          <button class="code-tab is-active" type="button" role="tab" data-code-tab="create" aria-controls="code-example-panel" aria-selected="true">
+            <span>01</span><strong>Single photo</strong><i aria-hidden="true"></i>
+          </button>
+          <button class="code-tab" type="button" role="tab" data-code-tab="batch" aria-controls="code-example-panel" aria-selected="false">
+            <span>02</span><strong>Batch</strong><i aria-hidden="true"></i>
+          </button>
+          <button class="code-tab" type="button" role="tab" data-code-tab="quality" aria-controls="code-example-panel" aria-selected="false">
+            <span>03</span><strong>Quality</strong><i aria-hidden="true"></i>
+          </button>
         </div>
 
-        <footer class="package-explorer-footer">
-          <span><i></i> 43 tests passing</span>
-          <span>Python 3.8–3.13</span>
-          <span>Published on PyPI</span>
+        <div class="code-editor" id="code-example-panel" role="tabpanel">
+          <div class="code-editor-bar"><span>quickstart.py</span><span>Python 3.13</span></div>
+          <pre class="live-code" aria-hidden="true"><code id="live-code"></code></pre>
+          <p class="sr-only" id="code-example-description">A Python example showing how to create a biometric print sheet with BiyoVes.</p>
+        </div>
+
+        <footer class="code-runner" aria-hidden="true">
+          <div class="runner-state"><i></i><span><strong id="runner-title">Ready</strong><small id="runner-detail">Waiting to run quickstart.py</small></span></div>
+          <div class="runner-result"><span id="runner-result">sheet.jpg</span><strong id="runner-spec">4 photos · 300 DPI</strong></div>
         </footer>
       </section>
     </section>
@@ -269,24 +235,203 @@ document.querySelectorAll<HTMLButtonElement>('[data-copy-install]').forEach((but
   })
 })
 
-const apiTabs = document.querySelectorAll<HTMLButtonElement>('[data-api-tab]')
-const apiPanels = document.querySelectorAll<HTMLElement>('[data-api-panel]')
+interface CodeLine {
+  plain: string
+  html: string
+}
 
-apiTabs.forEach((tab) => {
-  tab.addEventListener('click', () => {
-    const selectedApi = tab.dataset.apiTab
+interface CodeExample {
+  key: string
+  description: string
+  result: string
+  spec: string
+  lines: CodeLine[]
+}
 
-    apiTabs.forEach((item) => {
-      const isSelected = item === tab
-      item.classList.toggle('is-active', isSelected)
-      item.setAttribute('aria-selected', String(isSelected))
-    })
+const codeExamples: CodeExample[] = [
+  {
+    key: 'create',
+    description: 'A Python example showing how to create a four-photo biometric print sheet with BiyoVes.',
+    result: 'sheet.jpg',
+    spec: '4 photos · 300 DPI',
+    lines: [
+      { plain: 'from biyoves import BiyoVes', html: '<span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes' },
+      { plain: '', html: '&nbsp;' },
+      { plain: 'photo = BiyoVes("portrait.jpg")', html: 'photo = <span class="code-function">BiyoVes</span>(<span class="code-string">"portrait.jpg"</span>)' },
+      { plain: 'photo.create_image(', html: 'photo.<span class="code-function">create_image</span>(' },
+      { plain: '    photo_type="biyometrik",', html: '    photo_type=<span class="code-string">"biyometrik"</span>,' },
+      { plain: '    layout_type="4lu",', html: '    layout_type=<span class="code-string">"4lu"</span>,' },
+      { plain: '    output_path="sheet.jpg",', html: '    output_path=<span class="code-string">"sheet.jpg"</span>,' },
+      { plain: ')', html: ')' },
+    ],
+  },
+  {
+    key: 'batch',
+    description: 'A Python example showing how to process an entire portrait folder with BiyoVes.',
+    result: 'results/',
+    spec: 'Folder complete · 300 DPI',
+    lines: [
+      { plain: 'from biyoves import BiyoVes', html: '<span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes' },
+      { plain: '', html: '&nbsp;' },
+      { plain: 'results = BiyoVes.batch_process(', html: 'results = BiyoVes.<span class="code-function">batch_process</span>(' },
+      { plain: '    input_dir="portraits/",', html: '    input_dir=<span class="code-string">"portraits/"</span>,' },
+      { plain: '    output_dir="results/",', html: '    output_dir=<span class="code-string">"results/"</span>,' },
+      { plain: '    photo_type="biyometrik",', html: '    photo_type=<span class="code-string">"biyometrik"</span>,' },
+      { plain: '    layout_type="4lu",', html: '    layout_type=<span class="code-string">"4lu"</span>,' },
+      { plain: ')', html: ')' },
+    ],
+  },
+  {
+    key: 'quality',
+    description: 'A Python example showing how to inspect portrait sharpness, eye state and frontal angle.',
+    result: 'acceptable: True',
+    spec: '3 checks passed',
+    lines: [
+      { plain: 'from biyoves import BiyoVes', html: '<span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes' },
+      { plain: '', html: '&nbsp;' },
+      { plain: 'photo = BiyoVes("portrait.jpg")', html: 'photo = <span class="code-function">BiyoVes</span>(<span class="code-string">"portrait.jpg"</span>)' },
+      { plain: 'report = photo.check_quality()', html: 'report = photo.<span class="code-function">check_quality</span>()' },
+      { plain: '', html: '&nbsp;' },
+      { plain: '# sharpness · eyes · face angle', html: '<span class="code-comment"># sharpness · eyes · face angle</span>' },
+      { plain: 'print(report["is_acceptable"])', html: '<span class="code-function">print</span>(report[<span class="code-string">"is_acceptable"</span>])' },
+    ],
+  },
+]
 
-    apiPanels.forEach((panel) => {
-      panel.hidden = panel.dataset.apiPanel !== selectedApi
-    })
+const codeCanvas = document.querySelector<HTMLElement>('.code-canvas')!
+const codeTabs = [...document.querySelectorAll<HTMLButtonElement>('[data-code-tab]')]
+const liveCode = document.querySelector<HTMLElement>('#live-code')!
+const codeDescription = document.querySelector<HTMLElement>('#code-example-description')!
+const runnerTitle = document.querySelector<HTMLElement>('#runner-title')!
+const runnerDetail = document.querySelector<HTMLElement>('#runner-detail')!
+const runnerResult = document.querySelector<HTMLElement>('#runner-result')!
+const runnerSpec = document.querySelector<HTMLElement>('#runner-spec')!
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+let codeAnimationId = 0
+let activeCodeIndex = 0
+
+function waitForCodeAnimation(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds))
+}
+
+function selectCodeTab(index: number): void {
+  activeCodeIndex = index
+  codeTabs.forEach((tab, tabIndex) => {
+    const isSelected = tabIndex === index
+    tab.classList.toggle('is-active', isSelected)
+    tab.setAttribute('aria-selected', String(isSelected))
+    tab.tabIndex = isSelected ? 0 : -1
+  })
+}
+
+function renderCompleteCode(example: CodeExample): void {
+  liveCode.replaceChildren(...example.lines.map((line, index) => {
+    const row = document.createElement('span')
+    row.className = 'code-line'
+    row.innerHTML = `<span class="line-number">${String(index + 1).padStart(2, '0')}</span><span class="line-content">${line.html}</span>`
+    return row
+  }))
+}
+
+function updateRunner(state: 'typing' | 'running' | 'success', example: CodeExample): void {
+  codeCanvas.dataset.runner = state
+  runnerResult.textContent = example.result
+  runnerSpec.textContent = example.spec
+
+  if (state === 'typing') {
+    runnerTitle.textContent = 'Writing example'
+    runnerDetail.textContent = 'Building quickstart.py'
+  } else if (state === 'running') {
+    runnerTitle.textContent = 'Running BiyoVes'
+    runnerDetail.textContent = 'Executing the open-source pipeline'
+  } else {
+    runnerTitle.textContent = 'Output created'
+    runnerDetail.textContent = 'The pipeline completed successfully'
+  }
+}
+
+async function typeCode(example: CodeExample, animationId: number): Promise<boolean> {
+  liveCode.replaceChildren()
+
+  for (const [index, line] of example.lines.entries()) {
+    if (animationId !== codeAnimationId) return false
+
+    const row = document.createElement('span')
+    const number = document.createElement('span')
+    const content = document.createElement('span')
+    row.className = 'code-line'
+    number.className = 'line-number'
+    content.className = 'line-content is-typing'
+    number.textContent = String(index + 1).padStart(2, '0')
+    row.append(number, content)
+    liveCode.append(row)
+
+    if (!line.plain) {
+      content.innerHTML = '&nbsp;'
+      content.classList.remove('is-typing')
+      await waitForCodeAnimation(45)
+      continue
+    }
+
+    for (const character of line.plain) {
+      if (animationId !== codeAnimationId) return false
+      content.textContent += character
+      await waitForCodeAnimation(character === ',' || character === '(' ? 20 : 12)
+    }
+
+    content.innerHTML = line.html
+    content.classList.remove('is-typing')
+    await waitForCodeAnimation(55)
+  }
+
+  return animationId === codeAnimationId
+}
+
+async function playCodeExample(index: number, holdAfterSelection = false): Promise<void> {
+  const animationId = ++codeAnimationId
+  const example = codeExamples[index]
+  if (!example) return
+
+  selectCodeTab(index)
+  codeDescription.textContent = example.description
+  codeCanvas.classList.remove('is-playing')
+  void codeCanvas.offsetWidth
+  codeCanvas.classList.add('is-playing')
+
+  if (reducedMotion.matches) {
+    renderCompleteCode(example)
+    updateRunner('success', example)
+    return
+  }
+
+  updateRunner('typing', example)
+  if (!await typeCode(example, animationId)) return
+
+  updateRunner('running', example)
+  await waitForCodeAnimation(820)
+  if (animationId !== codeAnimationId) return
+
+  updateRunner('success', example)
+  await waitForCodeAnimation(holdAfterSelection ? 7000 : 2300)
+  if (animationId !== codeAnimationId) return
+
+  void playCodeExample((index + 1) % codeExamples.length)
+}
+
+codeTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => void playCodeExample(index, true))
+  tab.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+    event.preventDefault()
+    const direction = event.key === 'ArrowRight' ? 1 : -1
+    const nextIndex = (index + direction + codeTabs.length) % codeTabs.length
+    codeTabs[nextIndex]?.focus()
+    void playCodeExample(nextIndex, true)
   })
 })
+
+reducedMotion.addEventListener('change', () => void playCodeExample(activeCodeIndex))
+void playCodeExample(0)
 
 const transformation = document.querySelector<HTMLElement>('#transformation')
 
