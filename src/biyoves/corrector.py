@@ -37,10 +37,12 @@ class FaceOrientationCorrector:
 
     def _rotate_image(self, image: np.ndarray, angle: int) -> np.ndarray:
         """Rotates image counter-clockwise by angle degrees (0, 90, 180, 270)."""
-        if angle == 0: return image
-        if angle == 90: return cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
-        if angle == 180: return cv2.rotate(image, cv2.ROTATE_180)
-        if angle == 270: return cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+        if angle == 90:
+            return cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        if angle == 180:
+            return cv2.rotate(image, cv2.ROTATE_180)
+        if angle == 270:
+            return cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
         return image
 
     def correct_image(self, image_input: Union[str, np.ndarray]) -> Optional[np.ndarray]:

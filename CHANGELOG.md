@@ -4,6 +4,11 @@ All notable changes to BiyoVes are documented here.
 
 ## Unreleased
 
+- Isolated the website's animated code demo and paused it when it is off-screen
+  or the page is hidden.
+- Allowed the web client to reconnect after a failed service connection.
+- Removed unused detector metadata, test imports, and source-path overrides.
+
 ## 1.4.1 - 2026-08-25
 
 - Replaced flood-fill and fixed-ratio hair positioning with direct measurement

@@ -37,6 +37,7 @@ export interface ProcessOptions {
 }
 
 let clientPromise: ReturnType<typeof Client.connect> | undefined
+let progressCallback: ProcessOptions['onProgress'] | undefined
 
 export function isServiceConfigured(): boolean {
   return Boolean(spaceId)
@@ -59,15 +60,18 @@ function describeSpaceStatus(status: SpaceStatus): string | undefined {
 }
 
 function getClient(onProgress: ProcessOptions['onProgress']) {
+  progressCallback = onProgress
+
   if (!clientPromise) {
     clientPromise = Client.connect(spaceId, {
       events: ['data', 'status'],
       record_history: false,
       status_callback: (status) => {
         const message = describeSpaceStatus(status)
-        if (message) onProgress({ stage: 'waking', message })
+        if (message) progressCallback?.({ stage: 'waking', message })
       },
     })
+    void clientPromise.catch(() => { clientPromise = undefined })
   }
 
   return clientPromise

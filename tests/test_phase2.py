@@ -1,16 +1,10 @@
 """Deterministic tests for the batch and quality APIs."""
-import os
-import sys
 from pathlib import Path
 from types import SimpleNamespace
 
 import cv2
 import numpy as np
 import pytest
-
-src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
-if src_path not in sys.path:
-    sys.path.insert(0, src_path)
 
 from biyoves import BiyoVes
 from biyoves.quality import PhotoQualityChecker, QualityReport

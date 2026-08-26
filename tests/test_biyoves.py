@@ -6,20 +6,14 @@ Integration tests require ONNX models and are skipped if models are absent.
 """
 import os
 import re
-import sys
 from pathlib import Path
 
 import numpy as np
 import cv2
 import pytest
 
-# Ensure local source is importable
-src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
-if src_path not in sys.path:
-    sys.path.insert(0, src_path)
-
 import biyoves
-from biyoves import BiyoVes, create_image
+from biyoves import BiyoVes
 
 
 # ---------------------------------------------------------------------------

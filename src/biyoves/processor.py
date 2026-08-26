@@ -68,7 +68,7 @@ class BiometricIDGenerator:
         # Photo specifications for each type (dimensions in mm)
         # Sources:
         #   biyometrik: ICAO 9303 standard — face height 32-36mm, target 34mm
-        #   vesikalik:  Turkish passport photo standard
+        #   vesikalik:  Turkish ID portrait format
         #   abd_vizesi: US Department of State visa photo requirements
         #   schengen:   EU Schengen visa photo requirements
         self.PHOTO_SPECS = {

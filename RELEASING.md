@@ -26,8 +26,8 @@ reviewer are recommended when the repository plan supports them.
 4. Create and push an annotated tag matching the package version:
 
    ```bash
-   git tag -a v1.3.3 -m "BiyoVes v1.3.3"
-   git push origin v1.3.3
+   git tag -a vX.Y.Z -m "BiyoVes vX.Y.Z"
+   git push origin vX.Y.Z
    ```
 
 The release workflow rejects mismatched tag, project, and package versions. Do

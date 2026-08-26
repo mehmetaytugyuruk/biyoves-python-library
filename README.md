@@ -1,4 +1,4 @@
-# BiyoVes - Python Library
+# BiyoVes Python Library
 
 AI-powered biometric, passport, and visa photo generation for Python.
 
@@ -36,8 +36,8 @@ from biyoves import BiyoVes
 # Specify the photo path
 img = BiyoVes("photo.jpg")
 
-# Create a passport photo (2-up layout)
-passport = img.create_image("vesikalik", "2li", "result_passport.jpg")
+# Create a Turkish ID photo (2-up layout)
+id_photo = img.create_image("vesikalik", "2li", "result_id.jpg")
 
 # Create a biometric photo (4-up layout)
 biometric = img.create_image("biyometrik", "4lu", "result_biometric.jpg")
@@ -55,7 +55,7 @@ schengen = img.create_image("schengen", "4lu", "result_schengen.jpg")
 from biyoves import create_image
 
 # Single-line processing
-passport = create_image("photo.jpg", "vesikalik", "2li", "result.jpg")
+id_photo = create_image("photo.jpg", "vesikalik", "2li", "result.jpg")
 ```
 
 ### Batch Processing
@@ -96,7 +96,7 @@ frontal face angle. It reports warnings but never blocks image generation.
 ## Photo Types
 
 - `"biyometrik"` - Standard biometric photo (50x60mm)
-- `"vesikalik"` - Passport photo (45x60mm)
+- `"vesikalik"` - Turkish ID photo (45x60mm)
 - `"abd_vizesi"` - US visa photo (50x50mm)
 - `"schengen"` - Schengen visa photo (35x45mm)
 

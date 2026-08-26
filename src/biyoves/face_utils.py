@@ -19,18 +19,9 @@ class SCRFD:
 
     def _init_vars(self) -> None:
         input_cfg = self.session.get_inputs()[0]
-        input_shape = input_cfg.shape
-        # Input shape typically: [1, 3, 640, 640]
-        if isinstance(input_shape[2], str):
-            self.input_height = None
-            self.input_width = None
-        else:
-            self.input_height = input_shape[2]
-            self.input_width = input_shape[3]
-        
         self.input_name = input_cfg.name
         self.output_names = [o.name for o in self.session.get_outputs()]
-        
+
         # SCRFD strides for "det_500m" (buffalo_s) are usually [8, 16, 32]
         self.fmc = 3
         self._feat_stride_fpn = [8, 16, 32]
@@ -66,7 +57,6 @@ class SCRFD:
 
             height = input_height // stride
             width = input_width // stride
-            K = height * width
             key = (height, width, stride)
 
             if key in self.center_cache:
