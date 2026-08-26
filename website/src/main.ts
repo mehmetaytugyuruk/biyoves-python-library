@@ -57,12 +57,12 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </a>
 
     <nav class="main-nav" aria-label="Main navigation">
-      <a href="#python-api">Python API</a>
       <a href="#studio-section">Live studio</a>
+      <a href="#transformation">Result</a>
       <a href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">GitHub</a>
     </nav>
 
-    <a class="header-action" href="https://pypi.org/project/biyoves/" target="_blank" rel="noreferrer">View on PyPI <span aria-hidden="true">&#8599;</span></a>
+    <a class="header-action" href="https://pypi.org/project/biyoves/" target="_blank" rel="noreferrer">View on PyPI</a>
   </header>
 
   <main id="top">
@@ -74,13 +74,13 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
         <div class="hero-actions">
           <a class="hero-primary" href="#studio-section">Try the live studio <span aria-hidden="true">&#8595;</span></a>
-          <a class="hero-secondary" href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">&#8599;</span></a>
+          <a class="hero-secondary" href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">View on GitHub</a>
         </div>
 
         <div class="install-command" aria-label="Package installation command">
           <span aria-hidden="true">$</span>
           <code>pip install biyoves</code>
-          <button id="copy-install" type="button">Copy</button>
+          <button type="button" data-copy-install>Copy</button>
         </div>
 
         <div class="trust-row" aria-label="Product highlights">
@@ -90,26 +90,74 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         </div>
       </div>
 
-      <figure class="hero-code" aria-label="BiyoVes Python usage example">
-        <div class="code-window-bar">
-          <span><i></i><i></i><i></i></span>
-          <span>example.py</span>
-          <span>Python</span>
-        </div>
-        <pre><code><span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes
+      <section class="package-explorer" aria-label="BiyoVes Python package explorer">
+        <header class="package-explorer-header">
+          <div class="package-identity">
+            <span class="package-monogram" aria-hidden="true">Py</span>
+            <div><strong>BiyoVes</strong><small>Open-source Python package</small></div>
+          </div>
+          <div class="package-meta" aria-label="Package metadata"><span>v1.4.1</span><span>MIT</span></div>
+        </header>
+
+        <div class="package-workspace">
+          <nav class="api-navigation" aria-label="Public API examples">
+            <span>Public API</span>
+            <button class="api-tab is-active" type="button" data-api-tab="create" aria-selected="true">
+              <code>create_image()</code><small>Single portrait</small>
+            </button>
+            <button class="api-tab" type="button" data-api-tab="batch" aria-selected="false">
+              <code>batch_process()</code><small>Entire folder</small>
+            </button>
+            <button class="api-tab" type="button" data-api-tab="quality" aria-selected="false">
+              <code>check_quality()</code><small>Preflight report</small>
+            </button>
+            <a href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">
+              <span>Repository</span><code>src/biyoves</code>
+            </a>
+          </nav>
+
+          <div class="api-preview">
+            <div class="api-preview-bar"><span>example.py</span><span>Python</span></div>
+
+            <pre class="api-panel" data-api-panel="create"><code><span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes
 
 photo = BiyoVes(<span class="code-string">"portrait.jpg"</span>)
-
 photo.create_image(
     photo_type=<span class="code-string">"biyometrik"</span>,
     layout_type=<span class="code-string">"4lu"</span>,
-    output_path=<span class="code-string">"print-sheet.jpg"</span>,
+    output_path=<span class="code-string">"sheet.jpg"</span>,
 )</code></pre>
-        <figcaption>
-          <span><i></i> Output created</span>
-          <b>50 × 60 mm · 4 photos · 300 DPI</b>
-        </figcaption>
-      </figure>
+
+            <pre class="api-panel" data-api-panel="batch" hidden><code><span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes
+
+results = BiyoVes.batch_process(
+    input_dir=<span class="code-string">"portraits/"</span>,
+    output_dir=<span class="code-string">"results/"</span>,
+    photo_type=<span class="code-string">"biyometrik"</span>,
+    layout_type=<span class="code-string">"4lu"</span>,
+)</code></pre>
+
+            <pre class="api-panel" data-api-panel="quality" hidden><code><span class="code-keyword">from</span> biyoves <span class="code-keyword">import</span> BiyoVes
+
+photo = BiyoVes(<span class="code-string">"portrait.jpg"</span>)
+report = photo.check_quality()
+
+<span class="code-comment"># sharpness · eyes · face angle</span>
+print(report[<span class="code-string">"is_acceptable"</span>])</code></pre>
+
+            <div class="api-output">
+              <span><i></i> Package ready</span>
+              <strong>JPG · PNG · PDF · 300 DPI</strong>
+            </div>
+          </div>
+        </div>
+
+        <footer class="package-explorer-footer">
+          <span><i></i> 43 tests passing</span>
+          <span>Python 3.8–3.13</span>
+          <span>Published on PyPI</span>
+        </footer>
+      </section>
     </section>
 
     <section class="studio-stage" id="studio-section" aria-labelledby="studio-title">
@@ -142,6 +190,7 @@ photo.create_image(
           <div class="proof-image">
             <img src="./demo/synthetic-source.webp" alt="Synthetic source portrait in a busy home interior" loading="lazy" />
             <span class="proof-badge">Before</span>
+            <span class="face-guide" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           </div>
           <figcaption>
             <div><span>Everyday portrait</span><b>Mixed background · casual framing</b></div>
@@ -149,7 +198,15 @@ photo.create_image(
           </figcaption>
         </figure>
 
-        <div class="proof-connector" aria-hidden="true"><span></span><b>&#8594;</b></div>
+        <div class="proof-pipeline" aria-label="BiyoVes processing stages">
+          <span class="pipeline-track" aria-hidden="true"><i></i></span>
+          <ol>
+            <li><span>01</span><strong>Detect</strong></li>
+            <li><span>02</span><strong>Align</strong></li>
+            <li><span>03</span><strong>Isolate</strong></li>
+            <li><span>04</span><strong>Arrange</strong></li>
+          </ol>
+        </div>
 
         <figure class="proof-card proof-card--output">
           <div class="proof-image">
@@ -166,115 +223,24 @@ photo.create_image(
       <p class="proof-disclosure"><span>Synthetic demo subject</span> The source portrait depicts no real person. The output was produced by the public BiyoVes processing service using the same workflow available above.</p>
     </section>
 
-    <section class="library-section" id="python-api" aria-labelledby="library-title">
-      <div class="section-shell">
-        <div class="section-intro section-intro--row">
-          <div>
-            <p class="section-index">02 / PYTHON API</p>
-            <h2 id="library-title">Use the complete pipeline in your own workflow.</h2>
-          </div>
-          <p>BiyoVes is not only this web interface. Install it from PyPI and process photos locally. The source code is MIT-licensed; bundled model weights retain their upstream terms.</p>
-        </div>
-
-        <div class="api-grid">
-          <article>
-            <code>create_image()</code>
-            <h3>Process one portrait</h3>
-            <p>Align the face, replace the background and export a JPG, PNG or print-ready PDF.</p>
-          </article>
-          <article>
-            <code>batch_process()</code>
-            <h3>Run an entire folder</h3>
-            <p>Apply one official format and print layout to multiple source photos in a single call.</p>
-          </article>
-          <article>
-            <code>check_quality()</code>
-            <h3>Inspect before delivery</h3>
-            <p>Report sharpness, eye state and frontal angle without blocking the final output.</p>
-          </article>
-        </div>
-
-        <div class="library-links">
-          <div><span>$</span><code>pip install biyoves</code></div>
-          <a href="https://pypi.org/project/biyoves/" target="_blank" rel="noreferrer">Package on PyPI <span aria-hidden="true">&#8599;</span></a>
-          <a href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">Source on GitHub <span aria-hidden="true">&#8599;</span></a>
-        </div>
-      </div>
-    </section>
-
-    <section class="standards-section" id="standards" aria-labelledby="standards-title">
-      <div class="section-shell">
-        <div class="section-intro section-intro--row">
-          <div>
-            <p class="section-index">03 / STANDARDS</p>
-            <h2 id="standards-title">Built for official photo formats.</h2>
-          </div>
-          <p>Choose an existing standard. BiyoVes handles the exact physical dimensions and exports at 300 DPI.</p>
-        </div>
-
-        <div class="standards-table">
-          ${photoStandards.map((standard, index) => `
-            <article class="standard-row">
-              <span class="standard-number">0${index + 1}</span>
-              <h3>${standard.label}</h3>
-              <span class="standard-detail">${standard.detail}</span>
-              <strong>${standard.dimensions}</strong>
-            </article>
-          `).join('')}
-        </div>
-      </div>
-    </section>
-
-    <section class="how-section section-shell" id="how-it-works" aria-labelledby="how-title">
-      <div class="section-intro">
-        <p class="section-index">04 / HOW IT WORKS</p>
-        <h2 id="how-title">One photo. Three simple steps.</h2>
+    <section class="closing-cta section-shell" id="install" aria-labelledby="closing-title">
+      <div class="closing-copy">
+        <p class="section-index">OPEN SOURCE / TWO WAYS TO USE</p>
+        <h2 id="closing-title">Use BiyoVes your way.</h2>
+        <p>Install the Python package for your own workflow, or process a portrait in the live studio without creating an account.</p>
       </div>
 
-      <div class="steps-grid">
-        <article>
-          <span class="step-number">01</span>
-          <div class="step-rule"></div>
-          <h3>Upload a portrait</h3>
-          <p>Choose a clear JPG or PNG photo taken from the front.</p>
-        </article>
-        <article>
-          <span class="step-number">02</span>
-          <div class="step-rule"></div>
-          <h3>Select the format</h3>
-          <p>Pick the official size, print layout and background.</p>
-        </article>
-        <article>
-          <span class="step-number">03</span>
-          <div class="step-rule"></div>
-          <h3>Download and print</h3>
-          <p>Save a high-quality JPG or a print-ready PDF.</p>
-        </article>
+      <div class="closing-options">
+        <div class="closing-install" aria-label="Package installation command">
+          <span aria-hidden="true">$</span>
+          <code>pip install biyoves</code>
+          <button type="button" data-copy-install>Copy</button>
+        </div>
+        <div class="closing-actions">
+          <a class="hero-primary" href="#studio-section">Open live studio</a>
+          <a class="hero-secondary" href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">View source</a>
+        </div>
       </div>
-    </section>
-
-    <section class="principles-section">
-      <div class="section-shell principles-grid">
-        <article class="principle principle--privacy">
-          <p class="section-index">PRIVACY</p>
-          <h2>Your photo stays yours.</h2>
-          <p>Files are used only to create your result. No account, profile or photo library is created.</p>
-          <span class="principle-mark" aria-hidden="true">&#9675;</span>
-        </article>
-
-        <article class="principle principle--source">
-          <p class="section-index">OPEN SOURCE</p>
-          <h2>Built in public.</h2>
-          <p>The processing library is free to inspect, use and improve.</p>
-          <a href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">Explore the project <span aria-hidden="true">&#8599;</span></a>
-        </article>
-      </div>
-    </section>
-
-    <section class="closing-cta section-shell">
-      <p class="section-index">READY WHEN YOU ARE</p>
-      <h2>Create your biometric photo.</h2>
-      <a href="#studio-section">Open the studio <span aria-hidden="true">&#8593;</span></a>
     </section>
   </main>
 
@@ -291,16 +257,50 @@ photo.create_image(
   </footer>
 `
 
-const copyInstallButton = document.querySelector<HTMLButtonElement>('#copy-install')
-copyInstallButton?.addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText('pip install biyoves')
-    copyInstallButton.textContent = 'Copied'
-    window.setTimeout(() => { copyInstallButton.textContent = 'Copy' }, 1600)
-  } catch {
-    copyInstallButton.textContent = 'pip install biyoves'
-  }
+document.querySelectorAll<HTMLButtonElement>('[data-copy-install]').forEach((button) => {
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText('pip install biyoves')
+      button.textContent = 'Copied'
+      window.setTimeout(() => { button.textContent = 'Copy' }, 1600)
+    } catch {
+      button.textContent = 'pip install biyoves'
+    }
+  })
 })
+
+const apiTabs = document.querySelectorAll<HTMLButtonElement>('[data-api-tab]')
+const apiPanels = document.querySelectorAll<HTMLElement>('[data-api-panel]')
+
+apiTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const selectedApi = tab.dataset.apiTab
+
+    apiTabs.forEach((item) => {
+      const isSelected = item === tab
+      item.classList.toggle('is-active', isSelected)
+      item.setAttribute('aria-selected', String(isSelected))
+    })
+
+    apiPanels.forEach((panel) => {
+      panel.hidden = panel.dataset.apiPanel !== selectedApi
+    })
+  })
+})
+
+const transformation = document.querySelector<HTMLElement>('#transformation')
+
+if (transformation && 'IntersectionObserver' in window) {
+  const transformationObserver = new IntersectionObserver(([entry], observer) => {
+    if (!entry?.isIntersecting) return
+    transformation.classList.add('is-revealed')
+    observer.disconnect()
+  }, { threshold: 0.28 })
+
+  transformationObserver.observe(transformation)
+} else {
+  transformation?.classList.add('is-revealed')
+}
 
 const studio = document.querySelector<HTMLDivElement>('#studio')!
 
