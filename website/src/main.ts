@@ -60,7 +60,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <nav class="main-nav" aria-label="Main navigation">
       <a href="#studio-section">Live studio</a>
       <a href="#transformation">Result</a>
-      <a href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="https://github.com/mehmetaytugyuruk/biyoves" target="_blank" rel="noreferrer">GitHub</a>
     </nav>
 
     <a class="header-action" href="https://pypi.org/project/biyoves/" target="_blank" rel="noreferrer">View on PyPI</a>
@@ -75,7 +75,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
         <div class="hero-actions">
           <a class="hero-primary" href="#studio-section">Try the live studio <span aria-hidden="true">&#8595;</span></a>
-          <a class="hero-secondary" href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">View on GitHub</a>
+          <a class="hero-secondary" href="https://github.com/mehmetaytugyuruk/biyoves" target="_blank" rel="noreferrer">View on GitHub</a>
         </div>
 
         <div class="install-command" aria-label="Package installation command">
@@ -205,7 +205,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         </div>
         <div class="closing-actions">
           <a class="hero-primary" href="#studio-section">Open live studio</a>
-          <a class="hero-secondary" href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">View source</a>
+          <a class="hero-secondary" href="https://github.com/mehmetaytugyuruk/biyoves" target="_blank" rel="noreferrer">View source</a>
         </div>
       </div>
     </section>
@@ -218,7 +218,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <p>Open-source biometric photo processing for Python.</p>
     <div class="footer-links">
       <a href="https://pypi.org/project/biyoves/" target="_blank" rel="noreferrer">PyPI</a>
-      <a href="https://github.com/mehmetaytugyuruk/biyoves-python-library" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="https://github.com/mehmetaytugyuruk/biyoves" target="_blank" rel="noreferrer">GitHub</a>
     </div>
     <span class="footer-origin">Made in Türkiye</span>
   </footer>

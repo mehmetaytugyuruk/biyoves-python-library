@@ -39,9 +39,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://mehmetaytugyuruk.github.io/biyoves-python-library/"
-Documentation = "https://github.com/mehmetaytugyuruk/biyoves-python-library#readme"
-Repository = "https://github.com/mehmetaytugyuruk/biyoves-python-library"
+Homepage = "https://mehmetaytugyuruk.github.io/biyoves/"
+Documentation = "https://github.com/mehmetaytugyuruk/biyoves#readme"
+Repository = "https://github.com/mehmetaytugyuruk/biyoves"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

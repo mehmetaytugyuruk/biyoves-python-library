@@ -10,7 +10,7 @@ Add a Trusted Publisher at
 `https://pypi.org/manage/project/biyoves/settings/publishing/` with:
 
 - Owner: `mehmetaytugyuruk`
-- Repository: `biyoves-python-library`
+- Repository: `biyoves`
 - Workflow: `release.yml`
 - Environment: `pypi`
 
