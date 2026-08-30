@@ -3,10 +3,10 @@
 AI-powered biometric, passport, and visa photo generation for Python.
 
 > [!TIP]
-> **BiyoVes also has a free Web Studio:** [Open it in your browser →](https://mehmetaytugyuruk.github.io/biyoves-python-library/)
+> **BiyoVes also has a free Web Studio:** [Open it in your browser →](https://mehmetaytugyuruk.github.io/biyoves/)
 > No installation or account required.
 
-**Resources:** [PyPI](https://pypi.org/project/biyoves/) · [Issues](https://github.com/mehmetaytugyuruk/biyoves-python-library/issues) · [License](LICENSE)
+**Resources:** [PyPI](https://pypi.org/project/biyoves/) · [Issues](https://github.com/mehmetaytugyuruk/biyoves/issues) · [License](LICENSE)
 
 ## Overview
 
@@ -22,8 +22,8 @@ pip install biyoves
 Or from source:
 
 ```bash
-git clone https://github.com/mehmetaytugyuruk/biyoves-python-library.git
-cd biyoves-python-library
+git clone https://github.com/mehmetaytugyuruk/biyoves.git
+cd biyoves
 pip install -e .
 ```
 
